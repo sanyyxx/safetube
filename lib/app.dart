@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'features/home/home_shell.dart';
 import 'features/splash/splash_screen.dart';
+import 'l10n/app_localizations.dart';
 
 class UTubeFlutterApp extends StatefulWidget {
   const UTubeFlutterApp({super.key});
@@ -13,6 +15,7 @@ class UTubeFlutterApp extends StatefulWidget {
 class _UTubeFlutterAppState extends State<UTubeFlutterApp> {
   ThemeMode _themeMode = ThemeMode.system;
   double _themeSliderValue = 1; // 0=Light, 1=System, 2=Dark
+  Locale _locale = const Locale('ru');
 
   void _updateTheme(double value) {
     setState(() {
@@ -24,6 +27,12 @@ class _UTubeFlutterAppState extends State<UTubeFlutterApp> {
       } else {
         _themeMode = ThemeMode.dark;
       }
+    });
+  }
+
+  void _updateLocale(Locale locale) {
+    setState(() {
+      _locale = locale;
     });
   }
 
@@ -52,6 +61,18 @@ class _UTubeFlutterAppState extends State<UTubeFlutterApp> {
       theme: light,
       darkTheme: dark,
       themeMode: _themeMode,
+      locale: _locale,
+      supportedLocales: const [
+        Locale('ru'),
+        Locale('en'),
+        Locale('kk'),
+      ],
+      localizationsDelegates: const [
+        AppLocalizationsDelegate(),
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       home: SplashScreen(
         onDone: (context) {
           Navigator.of(context).pushReplacement(
@@ -59,6 +80,8 @@ class _UTubeFlutterAppState extends State<UTubeFlutterApp> {
               builder: (_) => HomeShell(
                 onThemeChanged: _updateTheme,
                 themeSliderValue: _themeSliderValue,
+                locale: _locale,
+                onLocaleChanged: _updateLocale,
               ),
             ),
           );

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../data/video_store.dart';
 import '../../data/video_item.dart';
 import 'widgets/video_list_item.dart';
+import '../../l10n/app_localizations.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -19,13 +20,257 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  String _searchQuery = '';
+  // Internal filter ids (not localized), used for basic filtering on demo data.
+  String _activeFilter = 'all';
+
+  List<VideoItem> get _filteredFeed {
+    final base = demoFeed;
+    Iterable<VideoItem> result = base;
+
+    if (_activeFilter != 'all') {
+      final keyword = switch (_activeFilter) {
+        'newToYou' => 'new',
+        'programming' => 'programming',
+        'cooking' => 'cooking',
+        'comedy' => 'comedy',
+        'diy' => 'diy',
+        'friedRice' => 'fried',
+        'recentlyViewed' => 'recent',
+        'live' => 'live',
+        _ => '',
+      };
+
+      result = result.where(
+        (v) =>
+            v.title.toLowerCase().contains(keyword) ||
+            v.channelName.toLowerCase().contains(keyword),
+      );
+
+      // Demo feed is tiny; if nothing matches, show all so UI never looks broken.
+      if (result.isEmpty) result = base;
+    }
+
+    if (_searchQuery.isNotEmpty) {
+      final q = _searchQuery.toLowerCase();
+      result = result.where(
+        (v) =>
+            v.title.toLowerCase().contains(q) ||
+            v.channelName.toLowerCase().contains(q),
+      );
+    }
+
+    return result.toList();
+  }
+
+  Future<void> _showSimpleSnack(String message) async {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(message),
+      ),
+    );
+  }
+
+  Future<void> _showSearchDialog() async {
+    final l = AppLocalizations.of(context);
+    final controller = TextEditingController(text: _searchQuery);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(l.t('dialog.search.title')),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: InputDecoration(
+              hintText: l.t('dialog.search.hint'),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(l.t('dialog.search.cancel')),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(controller.text),
+              child: Text(l.t('dialog.search.apply')),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (!mounted || result == null) return;
+    setState(() {
+      _searchQuery = result.trim();
+    });
+  }
+
+  void _updateFilter(String value) {
+    setState(() {
+      _activeFilter = value;
+    });
+  }
+
+  void _showCastSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                AppLocalizations.of(ctx).t('home.cast'),
+                style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Connect to a TV or other device to play video on a bigger screen.',
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const Icon(Icons.tv),
+                title: const Text('Chromecast'),
+                subtitle: const Text('Not connected'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _showSimpleSnack('Searching for devices…');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.help_outline),
+                title: const Text('Help'),
+                onTap: () => Navigator.pop(ctx),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showNotificationsSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Text(
+                    AppLocalizations.of(ctx).t('home.notifications'),
+                    style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Mark all as read'),
+                  ),
+                ],
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              child: Column(
+                children: [
+                  Icon(Icons.notifications_none, size: 64, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text(
+                    'You\'re all caught up',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 16,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'No new notifications',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showExploreSheet() {
+    final topics = <String>[
+      'Music',
+      'Gaming',
+      'Sports',
+      'News',
+      'Learning',
+      'Fashion',
+      'Science',
+      'Cooking',
+    ];
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                AppLocalizations.of(ctx).t('home.explore'),
+                style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: topics
+                    .map(
+                      (t) => ActionChip(
+                        label: Text(t),
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          final mapped = switch (t) {
+                            'News' => 'newToYou',
+                            'Learning' => 'programming',
+                            'Science' => 'programming',
+                            'Cooking' => 'cooking',
+                            'Fashion' => 'diy',
+                            _ => 'all',
+                          };
+                          _updateFilter(mapped);
+                        },
+                      ),
+                    )
+                    .toList(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
-            // Will be wired to admin-loaded feed later.
             await Future<void>.delayed(const Duration(milliseconds: 150));
           },
           child: CustomScrollView(
@@ -34,29 +279,72 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: _TopBar(
-                    onCast: () {},
-                    onNotifications: () {},
-                    onSearch: () {},
+                    onCast: _showCastSheet,
+                    onNotifications: _showNotificationsSheet,
+                    onSearch: _showSearchDialog,
                     onProfile: widget.onProfile,
                   ),
                 ),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: 8)),
-              const SliverToBoxAdapter(child: _ChipsRow()),
-              const SliverToBoxAdapter(child: SizedBox(height: 12)),
               SliverToBoxAdapter(
-                child: ListView.separated(
-                  primary: false,
-                  shrinkWrap: true,
-                  itemCount: demoFeed.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemBuilder: (context, i) {
-                    final item = demoFeed[i];
-                    return VideoListItem(
-                      video: item,
-                      onTap: () => widget.onOpenVideo(item),
+                child: _ChipsRow(
+                  activeFilter: _activeFilter,
+                  onFilterChanged: _updateFilter,
+                  onExplore: _showExploreSheet,
+                  onFeedback: () async {
+                    await showDialog<void>(
+                      context: context,
+                      builder: (context) {
+                        final controller = TextEditingController();
+                        return AlertDialog(
+                          title: const Text('Send feedback'),
+                          content: TextField(
+                            controller: controller,
+                            maxLines: 4,
+                            decoration: const InputDecoration(
+                              hintText: 'Tell us what you think',
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Text('CANCEL'),
+                            ),
+                            FilledButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                _showSimpleSnack('Thanks for your feedback!');
+                              },
+                              child: const Text('SEND'),
+                            ),
+                          ],
+                        );
+                      },
                     );
                   },
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 12)),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                sliver: SliverGrid(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, i) {
+                      final item = _filteredFeed[i];
+                      return VideoGridItem(
+                        video: item,
+                        onTap: () => widget.onOpenVideo(item),
+                      );
+                    },
+                    childCount: _filteredFeed.length,
+                  ),
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 220,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 1.1,
+                  ),
                 ),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: 12)),
@@ -83,6 +371,7 @@ class _TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return SizedBox(
       height: 56,
       child: Row(
@@ -93,24 +382,24 @@ class _TopBar extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            'YouTube',
+            l.t('app.youtube'),
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
           ),
           const Spacer(),
           IconButton(
-            tooltip: 'Cast',
+            tooltip: l.t('home.cast'),
             onPressed: onCast,
             icon: const Icon(Icons.cast),
           ),
           IconButton(
-            tooltip: 'Notifications',
+            tooltip: l.t('home.notifications'),
             onPressed: onNotifications,
             icon: const Icon(Icons.notifications_none),
           ),
           IconButton(
-            tooltip: 'Search',
+            tooltip: l.t('home.search'),
             onPressed: onSearch,
             icon: const Icon(Icons.search),
           ),
@@ -137,30 +426,62 @@ class _TopBar extends StatelessWidget {
 }
 
 class _ChipsRow extends StatelessWidget {
-  const _ChipsRow();
+  const _ChipsRow({
+    required this.activeFilter,
+    required this.onFilterChanged,
+    required this.onExplore,
+    required this.onFeedback,
+  });
+
+  final String activeFilter;
+  final void Function(String) onFilterChanged;
+  final VoidCallback onExplore;
+  final VoidCallback onFeedback;
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final filters = <String>[
+      'all',
+      'newToYou',
+      'programming',
+      'cooking',
+      'comedy',
+      'diy',
+      'friedRice',
+      'recentlyViewed',
+      'live',
+    ];
+
+    final filterLabels = <String, String>{
+      'all': l.t('home.filter.all'),
+      'newToYou': l.t('home.filter.newToYou'),
+      'programming': l.t('home.filter.programming'),
+      'cooking': l.t('home.filter.cooking'),
+      'comedy': l.t('home.filter.comedy'),
+      'diy': l.t('home.filter.diy'),
+      'friedRice': l.t('home.filter.friedRice'),
+      'recentlyViewed': l.t('home.filter.recentlyViewed'),
+      'live': l.t('home.filter.live'),
+    };
+
     final chips = <Widget>[
       ActionChip(
-        label: const Text('Explore'),
+        label: Text(l.t('home.explore')),
         avatar: const Icon(Icons.explore_outlined, size: 18),
-        onPressed: () {},
+        onPressed: onExplore,
       ),
       const _DotSeparator(),
-      const _FilterChip(text: 'All', selected: true),
-      const _FilterChip(text: 'New to you'),
-      const _FilterChip(text: 'Computer Programming'),
-      const _FilterChip(text: 'Cooking'),
-      const _FilterChip(text: 'Comedy'),
-      const _FilterChip(text: 'DIY'),
-      const _FilterChip(text: 'Fried Rice'),
-      const _FilterChip(text: 'Recently Viewed'),
-      const _FilterChip(text: 'Live'),
+      for (final f in filters)
+        _FilterChip(
+          text: filterLabels[f] ?? f,
+          selected: activeFilter == f,
+          onSelected: () => onFilterChanged(f),
+        ),
       TextButton(
-        onPressed: () {},
-        child: const Text(
-          'SEND FEEDBACK',
+        onPressed: onFeedback,
+        child: Text(
+          l.t('home.sendFeedback'),
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
       ),
@@ -193,16 +514,21 @@ class _DotSeparator extends StatelessWidget {
 }
 
 class _FilterChip extends StatelessWidget {
-  const _FilterChip({required this.text, this.selected = false});
+  const _FilterChip({
+    required this.text,
+    this.selected = false,
+    required this.onSelected,
+  });
   final String text;
   final bool selected;
+  final VoidCallback onSelected;
 
   @override
   Widget build(BuildContext context) {
     return FilterChip(
       selected: selected,
       label: Text(text),
-      onSelected: (_) {},
+      onSelected: (_) => onSelected(),
       showCheckmark: false,
       selectedColor: const Color(0xFF9A9898),
     );

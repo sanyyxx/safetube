@@ -91,7 +91,65 @@ class VideoListItem extends StatelessWidget {
                     ),
                     IconButton(
                       tooltip: 'More actions',
-                      onPressed: () {},
+                      onPressed: () {
+                        showModalBottomSheet<void>(
+                          context: context,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.vertical(top: Radius.circular(16)),
+                          ),
+                          builder: (context) {
+                            return SafeArea(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ListTile(
+                                    leading:
+                                        const Icon(Icons.play_arrow_outlined),
+                                    title: const Text('Play now'),
+                                    onTap: () {
+                                      Navigator.of(context).pop();
+                                      onTap();
+                                    },
+                                  ),
+                                  ListTile(
+                                    leading:
+                                        const Icon(Icons.watch_later_outlined),
+                                    title: const Text('Watch later'),
+                                    onTap: () {
+                                      Navigator.of(context).pop();
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Added to “Watch later” ',
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                  ListTile(
+                                    leading:
+                                        const Icon(Icons.playlist_add_outlined),
+                                    title: const Text('Save to playlist'),
+                                    onTap: () {
+                                      Navigator.of(context).pop();
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Saved to playlist',
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      },
                       icon: const Icon(Icons.more_vert),
                     ),
                   ],
@@ -99,6 +157,80 @@ class VideoListItem extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class VideoGridItem extends StatelessWidget {
+  const VideoGridItem({
+    super.key,
+    required this.video,
+    required this.onTap,
+  });
+
+  final VideoItem video;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final title = video.title;
+    final channel = video.channelName;
+    final views = video.viewsText;
+    final meta = [channel, views].where((s) => s.isNotEmpty).join(' • ');
+
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final subtitleColor = isDark ? Colors.white70 : Colors.black54;
+
+    return Semantics(
+      container: true,
+      label: 'Video: $title. $meta',
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AspectRatio(
+              aspectRatio: 16 / 9,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: CachedNetworkImage(
+                  imageUrl: video.thumbnailUrl,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(
+                    color: const Color(0xFFEEEEEE),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    color: const Color(0xFFEEEEEE),
+                    child: const Center(
+                      child: Icon(Icons.broken_image_outlined),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              meta,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                    color: subtitleColor,
+                  ),
+            ),
+          ],
         ),
       ),
     );

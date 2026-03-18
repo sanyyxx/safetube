@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
+import '../../l10n/app_localizations.dart';
+
 import '../../data/video_item.dart';
 
 class PlayerScreen extends StatefulWidget {
@@ -149,7 +151,6 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
     final isReady = c.value.isInitialized;
 
     final scaffold = Scaffold(
-      backgroundColor: Colors.white,
       body: SafeArea(
         top: !_isFullscreen,
         bottom: !_isFullscreen,
@@ -175,6 +176,7 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
                     },
                     onFullscreen: _toggleFullscreen,
                     onSpeedPressed: () => _showSpeedQualitySheet(context),
+                    onSettingsPressed: () => _showPlayerSettingsSheet(context),
                     onMiniToggle: () => widget.onEnterMini(),
                   ),
                 if (!_isFullscreen)
@@ -212,6 +214,9 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
                   onSubscribeToggle: () {
                     setState(() => _subscribed = !_subscribed);
                   },
+                  onShare: () => _showShareSheet(context),
+                  onDownload: () => _showDownloadSheet(context),
+                  onSave: () => _showSaveToPlaylistSheet(context),
                 ),
                   ),
               ],
@@ -232,20 +237,23 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
 
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? Theme.of(context).colorScheme.surface
+          : Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) {
+        final l = AppLocalizations.of(context);
         return SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Padding(
+              Padding(
                 padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
                 child: Text(
-                  'Playback speed',
+                  l.t('player.sheet.playbackSpeed'),
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
@@ -262,10 +270,10 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
                   title: Text('${speed}x'),
                 ),
               const Divider(),
-              const Padding(
+              Padding(
                 padding: EdgeInsets.fromLTRB(16, 8, 16, 4),
                 child: Text(
-                  'Quality (HLS/DASH)',
+                  l.t('player.sheet.quality'),
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
@@ -273,9 +281,7 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
                 (q) => ListTile(
                   title: Text(q),
                   subtitle: q == 'Auto'
-                      ? const Text(
-                          'Stub – выбор качества будет управляться сервером',
-                        )
+                      ? Text(l.t('player.sheet.qualityAuto'))
                       : null,
                   trailing: q == _qualityLabel
                       ? const Icon(Icons.check, color: Colors.red)
@@ -290,6 +296,181 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
           ),
         );
       },
+    );
+  }
+
+  void _showPlayerSettingsSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: Text(
+                AppLocalizations.of(ctx).t('player.settings.title'),
+                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.speed),
+              title: Text(AppLocalizations.of(ctx).t('player.settings.playback')),
+              subtitle: Text(AppLocalizations.of(ctx).t('player.settings.playbackSubtitle')),
+              onTap: () {
+                Navigator.pop(ctx);
+                _showSpeedQualitySheet(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.closed_caption),
+              title: Text(AppLocalizations.of(ctx).t('player.settings.captions')),
+              subtitle: Text(AppLocalizations.of(ctx).t('player.settings.captionsSubtitle')),
+              onTap: () => Navigator.pop(ctx),
+            ),
+            ListTile(
+              leading: const Icon(Icons.play_circle_outline),
+              title: Text(AppLocalizations.of(ctx).t('player.settings.autoplay')),
+              subtitle: Text(AppLocalizations.of(ctx).t('player.settings.autoplaySubtitle')),
+              onTap: () => Navigator.pop(ctx),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showShareSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                AppLocalizations.of(ctx).t('player.sheet.share'),
+                style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const Icon(Icons.link),
+                title: Text(AppLocalizations.of(ctx).t('player.sheet.copyLink')),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(AppLocalizations.of(context).t('player.sheet.linkCopied'))),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.chat),
+                title: Text(AppLocalizations.of(ctx).t('player.sheet.shareToMessages')),
+                onTap: () => Navigator.pop(ctx),
+              ),
+              ListTile(
+                leading: const Icon(Icons.email),
+                title: Text(AppLocalizations.of(ctx).t('player.sheet.shareToEmail')),
+                onTap: () => Navigator.pop(ctx),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showDownloadSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                AppLocalizations.of(ctx).t('player.sheet.download'),
+                style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                AppLocalizations.of(ctx).t('player.sheet.downloadDescription'),
+                style: const TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 16),
+              const ListTile(
+                leading: Icon(Icons.high_quality),
+                title: Text('Quality'),
+                subtitle: Text('720p'),
+              ),
+              FilledButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(AppLocalizations.of(context).t('player.sheet.downloading'))),
+                  );
+                },
+                child: Text(AppLocalizations.of(context).t('player.sheet.downloadButton')),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showSaveToPlaylistSheet(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final playlists = <String>[
+      l.t('player.playlists.watchLater'),
+      l.t('player.playlists.favorites'),
+      l.t('player.playlists.music'),
+    ];
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                l.t('player.sheet.savePlaylist'),
+                style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              const SizedBox(height: 16),
+              ...playlists.map(
+                (name) => ListTile(
+                  title: Text(name),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Saved to $name')),
+                    );
+                  },
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.add),
+                title: Text(l.t('player.sheet.createNewPlaylist')),
+                onTap: () => Navigator.pop(ctx),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -307,6 +488,7 @@ class _PlayerSurface extends StatefulWidget {
     required this.onScrubTo,
     required this.onFullscreen,
     required this.onSpeedPressed,
+    required this.onSettingsPressed,
     required this.onMiniToggle,
   });
 
@@ -321,6 +503,7 @@ class _PlayerSurface extends StatefulWidget {
   final Future<void> Function(Duration position) onScrubTo;
   final VoidCallback onFullscreen;
   final VoidCallback onSpeedPressed;
+  final VoidCallback onSettingsPressed;
   final VoidCallback onMiniToggle;
 
   @override
@@ -533,7 +716,7 @@ class _PlayerSurfaceState extends State<_PlayerSurface>
                             ),
                             IconButton(
                               tooltip: 'Settings',
-                              onPressed: () {},
+                              onPressed: widget.onSettingsPressed,
                               icon: const Icon(Icons.settings_outlined, color: Colors.white),
                             ),
                           ],
@@ -770,6 +953,9 @@ class _MetadataPanel extends StatelessWidget {
     required this.onLikeToggle,
     required this.onDislikeToggle,
     required this.onSubscribeToggle,
+    required this.onShare,
+    required this.onDownload,
+    required this.onSave,
   });
 
   final VideoItem video;
@@ -781,6 +967,9 @@ class _MetadataPanel extends StatelessWidget {
   final VoidCallback onLikeToggle;
   final VoidCallback onDislikeToggle;
   final VoidCallback onSubscribeToggle;
+  final VoidCallback onShare;
+  final VoidCallback onDownload;
+  final VoidCallback onSave;
 
   @override
   Widget build(BuildContext context) {
@@ -799,14 +988,18 @@ class _MetadataPanel extends StatelessWidget {
         Text(
           '${video.viewsText} • ${video.publishedText}'.trim(),
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.black54,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white70
+                    : Colors.black54,
               ),
         ),
         const SizedBox(height: 4),
         Text(
           'Quality: $qualityLabel',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.black54,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white70
+                    : Colors.black54,
               ),
         ),
         const SizedBox(height: 12),
@@ -829,7 +1022,11 @@ class _MetadataPanel extends StatelessWidget {
                 backgroundColor: subscribed ? Colors.grey[800] : Colors.red,
               ),
               onPressed: onSubscribeToggle,
-              child: Text(subscribed ? 'Subscribed' : 'Subscribe'),
+              child: Text(
+                AppLocalizations.of(context).t(
+                  subscribed ? 'shorts.subscribed' : 'shorts.subscribe',
+                ),
+              ),
             ),
           ],
         ),
@@ -848,44 +1045,52 @@ class _MetadataPanel extends StatelessWidget {
               const SizedBox(width: 10),
               _ActionPill(
                 icon: disliked ? Icons.thumb_down : Icons.thumb_down_outlined,
-                label: 'Dislike',
+                label: AppLocalizations.of(context).t('player.action.dislike'),
                 active: disliked,
                 onTap: onDislikeToggle,
               ),
               const SizedBox(width: 10),
-              const _ActionPill(
+              _ActionPill(
                 icon: Icons.reply_outlined,
-                label: 'Share',
+                label: AppLocalizations.of(context).t('player.action.share'),
+                onTap: onShare,
               ),
               const SizedBox(width: 10),
-              const _ActionPill(
+              _ActionPill(
                 icon: Icons.download_outlined,
-                label: 'Download',
+                label: AppLocalizations.of(context).t('player.action.download'),
+                onTap: onDownload,
               ),
               const SizedBox(width: 10),
-              const _ActionPill(
+              _ActionPill(
                 icon: Icons.playlist_add_outlined,
-                label: 'Save',
+                label: AppLocalizations.of(context).t('player.action.save'),
+                onTap: onSave,
               ),
             ],
           ),
         ),
         const SizedBox(height: 14),
         Material(
-          color: const Color(0xFFF2F2F2),
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Colors.white10
+              : const Color(0xFFF2F2F2),
           borderRadius: BorderRadius.circular(12),
-          child: const Padding(
-            padding: EdgeInsets.all(12),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
             child: Text(
-              'Description will appear here.',
-              style: TextStyle(color: Colors.black87),
+              AppLocalizations.of(context).t('player.descriptionStub'),
             ),
           ),
         ),
         const SizedBox(height: 18),
-        const Text(
-          'No YouTube recommendations here.',
-          style: TextStyle(color: Colors.black54),
+        Text(
+          AppLocalizations.of(context).t('player.noRecommendations'),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white70
+                    : Colors.black54,
+              ),
         ),
         const SizedBox(height: 18),
         const _CommentsSection(),
@@ -911,6 +1116,18 @@ class _ActionPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xFF2E2E2E) : const Color(0xFFF2F2F2);
+    final bgActive =
+        isDark ? const Color(0xFF3A3A3A) : Colors.white.withOpacity(0.95);
+    final fgInactive = isDark ? Colors.white.withOpacity(0.85) : Colors.black87;
+    final fgActive = active
+        ? (isDark
+            ? theme.colorScheme.primary.withOpacity(0.95)
+            : theme.colorScheme.primary)
+        : fgInactive;
+
     return Semantics(
       button: true,
       label: label,
@@ -920,13 +1137,13 @@ class _ActionPill extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
-            color: active ? Colors.white : const Color(0xFFF2F2F2),
+            color: active ? bgActive : bg,
             borderRadius: BorderRadius.circular(999),
             boxShadow: active
                 ? [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 4,
+                      color: Colors.black.withValues(alpha: 0.12),
+                      blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
                   ]
@@ -938,14 +1155,14 @@ class _ActionPill extends StatelessWidget {
               Icon(
                 icon,
                 size: 18,
-                color: active ? Colors.red : Colors.black87,
+                color: fgActive,
               ),
               const SizedBox(width: 8),
               Text(
                 label,
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  color: active ? Colors.red : Colors.black87,
+                  color: fgActive,
                 ),
               ),
             ],
@@ -965,15 +1182,21 @@ class _CommentsSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          children: const [
+          children: [
             Text(
-              'Comments',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+              AppLocalizations.of(context).t('player.comments'),
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             Text(
               '• 123',
-              style: TextStyle(color: Colors.black54),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white70
+                        : Colors.black54,
+                  ),
             ),
           ],
         ),
@@ -1006,7 +1229,7 @@ class _CommentsSection extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       const Text(
-                        'Very nice video! This is a placeholder comment.',
+                        'Great video!',
                       ),
                       const SizedBox(height: 4),
                       Row(
@@ -1037,9 +1260,11 @@ class _RecommendationsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Up next',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+        Text(
+          AppLocalizations.of(context).t('player.upNext'),
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
         ),
         const SizedBox(height: 8),
         ListView.separated(
