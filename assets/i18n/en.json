@@ -27,6 +27,10 @@
   "dialog.search.cancel": "CANCEL",
   "dialog.search.apply": "APPLY",
 
+  "search.hintYouTube": "Search on YouTube",
+  "search.voiceUnavailable": "Voice search unavailable",
+  "search.noResults": "No results found",
+
   "you.title": "You",
   "you.history": "History",
   "you.yourVideos": "Your videos",
@@ -89,6 +93,11 @@
   "shorts.sheet.copyLink": "Copy link",
   "shorts.sheet.share": "Share…",
   "shorts.sheet.linkCopied": "Link copied",
+  "shorts.commentsTitle": "Comments",
+  "shorts.commentPlaceholder": "Add a comment",
+  "shorts.pinnedBy": "Pinned by",
+  "shorts.repliesCount": "%s replies",
+  "shorts.filterComments": "Sort by",
 
   "nav.home": "Home",
   "nav.shorts": "Shorts",

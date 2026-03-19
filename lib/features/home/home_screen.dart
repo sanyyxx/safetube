@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../data/video_store.dart';
 import '../../data/video_item.dart';
 import 'widgets/video_list_item.dart';
+import 'search_screen.dart';
 import '../../l10n/app_localizations.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -21,6 +23,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String _searchQuery = '';
+  final List<SearchHistoryEntry> _searchHistory = [];
   // Internal filter ids (not localized), used for basic filtering on demo data.
   String _activeFilter = 'all';
 
@@ -74,34 +77,25 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _showSearchDialog() async {
-    final l = AppLocalizations.of(context);
-    final controller = TextEditingController(text: _searchQuery);
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(l.t('dialog.search.title')),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            decoration: InputDecoration(
-              hintText: l.t('dialog.search.hint'),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(l.t('dialog.search.cancel')),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(controller.text),
-              child: Text(l.t('dialog.search.apply')),
-            ),
-          ],
-        );
-      },
+    final result = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (context) => SearchScreen(
+          initialQuery: _searchQuery,
+          history: List<SearchHistoryEntry>.from(_searchHistory),
+          onSearch: (query) {
+            setState(() {
+              _searchHistory.removeWhere((e) => e.query == query);
+              _searchHistory.insert(0, SearchHistoryEntry(query: query));
+              if (_searchHistory.length > 20) _searchHistory.removeLast();
+            });
+          },
+          onApplyQuery: (query) {
+            setState(() => _searchQuery = query);
+          },
+          onOpenVideo: (item) => widget.onOpenVideo(item),
+        ),
+      ),
     );
-
     if (!mounted || result == null) return;
     setState(() {
       _searchQuery = result.trim();
@@ -136,7 +130,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 16),
               ListTile(
-                leading: const Icon(Icons.tv),
+                leading: const Icon(Symbols.tv_rounded),
                 title: const Text('Chromecast'),
                 subtitle: const Text('Not connected'),
                 onTap: () {
@@ -145,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.help_outline),
+                leading: const Icon(Symbols.help_outline_rounded),
                 title: const Text('Help'),
                 onTap: () => Navigator.pop(ctx),
               ),
@@ -185,7 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: EdgeInsets.symmetric(horizontal: 24, vertical: 32),
               child: Column(
                 children: [
-                  Icon(Icons.notifications_none, size: 64, color: Colors.grey),
+                  Icon(Symbols.notifications_rounded, size: 64, color: Colors.grey),
                   SizedBox(height: 16),
                   Text(
                     'You\'re all caught up',
@@ -326,25 +320,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: 12)),
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                sliver: SliverGrid(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, i) {
-                      final item = _filteredFeed[i];
-                      return VideoGridItem(
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, i) {
+                    final item = _filteredFeed[i];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: VideoListItem(
                         video: item,
                         onTap: () => widget.onOpenVideo(item),
-                      );
-                    },
-                    childCount: _filteredFeed.length,
-                  ),
-                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 220,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 1.1,
-                  ),
+                      ),
+                    );
+                  },
+                  childCount: _filteredFeed.length,
                 ),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: 12)),
@@ -378,7 +366,7 @@ class _TopBar extends StatelessWidget {
         children: [
           Semantics(
             label: 'YouTube',
-            child: const Icon(Icons.smart_display, color: Colors.red, size: 28),
+            child: const Icon(Symbols.smart_display_rounded, color: Colors.red, size: 28),
           ),
           const SizedBox(width: 6),
           Text(
@@ -391,17 +379,17 @@ class _TopBar extends StatelessWidget {
           IconButton(
             tooltip: l.t('home.cast'),
             onPressed: onCast,
-            icon: const Icon(Icons.cast),
+            icon: const Icon(Symbols.cast_rounded),
           ),
           IconButton(
             tooltip: l.t('home.notifications'),
             onPressed: onNotifications,
-            icon: const Icon(Icons.notifications_none),
+            icon: const Icon(Symbols.notifications_rounded),
           ),
           IconButton(
             tooltip: l.t('home.search'),
             onPressed: onSearch,
-            icon: const Icon(Icons.search),
+            icon: const Icon(Symbols.search_rounded),
           ),
           Semantics(
             label: 'Profile',
@@ -414,7 +402,7 @@ class _TopBar extends StatelessWidget {
                 child: CircleAvatar(
                   radius: 14,
                   backgroundColor: Color(0xFFEEEEEE),
-                  child: Icon(Icons.person, size: 18, color: Colors.black54),
+                  child: Icon(Symbols.person_rounded, size: 18, color: Colors.black54),
                 ),
               ),
             ),
@@ -468,7 +456,7 @@ class _ChipsRow extends StatelessWidget {
     final chips = <Widget>[
       ActionChip(
         label: Text(l.t('home.explore')),
-        avatar: const Icon(Icons.explore_outlined, size: 18),
+        avatar: const Icon(Symbols.explore_rounded, size: 18),
         onPressed: onExplore,
       ),
       const _DotSeparator(),

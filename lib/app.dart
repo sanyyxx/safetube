@@ -1,33 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'features/home/home_shell.dart';
 import 'features/splash/splash_screen.dart';
 import 'l10n/app_localizations.dart';
 
 class UTubeFlutterApp extends StatefulWidget {
-  const UTubeFlutterApp({super.key});
+  const UTubeFlutterApp({super.key, this.initialThemeSliderValue = 1.0});
+
+  final double initialThemeSliderValue;
 
   @override
   State<UTubeFlutterApp> createState() => _UTubeFlutterAppState();
 }
 
 class _UTubeFlutterAppState extends State<UTubeFlutterApp> {
-  ThemeMode _themeMode = ThemeMode.system;
-  double _themeSliderValue = 1; // 0=Light, 1=System, 2=Dark
+  static const _keyThemeSlider = 'theme_slider_value';
+
+  late ThemeMode _themeMode;
+  late double _themeSliderValue;
   Locale _locale = const Locale('ru');
 
-  void _updateTheme(double value) {
+  static ThemeMode _themeModeFromSlider(double value) {
+    if (value < 0.5) return ThemeMode.light;
+    if (value < 1.5) return ThemeMode.system;
+    return ThemeMode.dark;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _themeSliderValue = widget.initialThemeSliderValue;
+    _themeMode = _themeModeFromSlider(_themeSliderValue);
+  }
+
+  Future<void> _updateTheme(double value) async {
     setState(() {
       _themeSliderValue = value;
-      if (value < 0.5) {
-        _themeMode = ThemeMode.light;
-      } else if (value < 1.5) {
-        _themeMode = ThemeMode.system;
-      } else {
-        _themeMode = ThemeMode.dark;
-      }
+      _themeMode = _themeModeFromSlider(value);
     });
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_keyThemeSlider, value);
   }
 
   void _updateLocale(Locale locale) {

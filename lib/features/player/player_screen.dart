@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:video_player/video_player.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
@@ -284,7 +285,7 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
                       ? Text(l.t('player.sheet.qualityAuto'))
                       : null,
                   trailing: q == _qualityLabel
-                      ? const Icon(Icons.check, color: Colors.red)
+                      ? const Icon(Symbols.check_rounded, color: Colors.red)
                       : null,
                   onTap: () {
                     setState(() => _qualityLabel = q);
@@ -315,7 +316,7 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
               ),
             ),
             ListTile(
-              leading: const Icon(Icons.speed),
+              leading: const Icon(Symbols.speed_rounded),
               title: Text(AppLocalizations.of(ctx).t('player.settings.playback')),
               subtitle: Text(AppLocalizations.of(ctx).t('player.settings.playbackSubtitle')),
               onTap: () {
@@ -324,13 +325,13 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
               },
             ),
             ListTile(
-              leading: const Icon(Icons.closed_caption),
+              leading: const Icon(Symbols.closed_caption_rounded),
               title: Text(AppLocalizations.of(ctx).t('player.settings.captions')),
               subtitle: Text(AppLocalizations.of(ctx).t('player.settings.captionsSubtitle')),
               onTap: () => Navigator.pop(ctx),
             ),
             ListTile(
-              leading: const Icon(Icons.play_circle_outline),
+              leading: const Icon(Symbols.play_circle_rounded),
               title: Text(AppLocalizations.of(ctx).t('player.settings.autoplay')),
               subtitle: Text(AppLocalizations.of(ctx).t('player.settings.autoplaySubtitle')),
               onTap: () => Navigator.pop(ctx),
@@ -359,7 +360,7 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
               ),
               const SizedBox(height: 16),
               ListTile(
-                leading: const Icon(Icons.link),
+                leading: const Icon(Symbols.link_rounded),
                 title: Text(AppLocalizations.of(ctx).t('player.sheet.copyLink')),
                 onTap: () {
                   Navigator.pop(ctx);
@@ -369,12 +370,12 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.chat),
+                leading: const Icon(Symbols.chat_rounded),
                 title: Text(AppLocalizations.of(ctx).t('player.sheet.shareToMessages')),
                 onTap: () => Navigator.pop(ctx),
               ),
               ListTile(
-                leading: const Icon(Icons.email),
+                leading: const Icon(Symbols.email_rounded),
                 title: Text(AppLocalizations.of(ctx).t('player.sheet.shareToEmail')),
                 onTap: () => Navigator.pop(ctx),
               ),
@@ -408,7 +409,7 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
               ),
               const SizedBox(height: 16),
               const ListTile(
-                leading: Icon(Icons.high_quality),
+                leading: Icon(Symbols.high_quality_rounded),
                 title: Text('Quality'),
                 subtitle: Text('720p'),
               ),
@@ -463,7 +464,7 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.add),
+                leading: const Icon(Symbols.add_rounded),
                 title: Text(l.t('player.sheet.createNewPlaylist')),
                 onTap: () => Navigator.pop(ctx),
               ),
@@ -632,7 +633,7 @@ class _PlayerSurfaceState extends State<_PlayerSurface>
                                child: Column(
                                  mainAxisSize: MainAxisSize.min,
                                  children: const [
-                                   Icon(Icons.replay_10,
+                                   Icon(Symbols.replay_10_rounded,
                                        color: Colors.white, size: 42),
                                    SizedBox(height: 4),
                                    Text(
@@ -659,7 +660,7 @@ class _PlayerSurfaceState extends State<_PlayerSurface>
                                child: Column(
                                  mainAxisSize: MainAxisSize.min,
                                  children: const [
-                                   Icon(Icons.forward_10,
+                                   Icon(Symbols.forward_10_rounded,
                                        color: Colors.white, size: 42),
                                    SizedBox(height: 4),
                                    Text(
@@ -706,18 +707,18 @@ class _PlayerSurfaceState extends State<_PlayerSurface>
                             IconButton(
                               tooltip: 'Back',
                               onPressed: onBack,
-                              icon: const Icon(Icons.arrow_back, color: Colors.white),
+                              icon: const Icon(Symbols.arrow_back_rounded, color: Colors.white),
                             ),
                             const Spacer(),
                             IconButton(
                               tooltip: 'Playback speed / quality',
                               onPressed: widget.onSpeedPressed,
-                              icon: const Icon(Icons.more_vert, color: Colors.white),
+                              icon: const Icon(Symbols.more_vert_rounded, color: Colors.white),
                             ),
                             IconButton(
                               tooltip: 'Settings',
                               onPressed: widget.onSettingsPressed,
-                              icon: const Icon(Icons.settings_outlined, color: Colors.white),
+                              icon: const Icon(Symbols.settings_rounded, color: Colors.white),
                             ),
                           ],
                         ),
@@ -730,14 +731,15 @@ class _PlayerSurfaceState extends State<_PlayerSurface>
                           IconButton(
                             tooltip: 'Rewind 10 seconds',
                             onPressed: () => onSeekRelative(const Duration(seconds: -10)),
-                            icon: const Icon(Icons.replay_10, color: Colors.white, size: 34),
+                            icon: const Icon(Symbols.replay_10_rounded, color: Colors.white, size: 34),
                           ),
                           const SizedBox(width: 10),
                           IconButton(
                             tooltip: playing ? 'Pause' : 'Play',
                             onPressed: onPlayPause,
                             icon: Icon(
-                              playing ? Icons.pause_circle_filled : Icons.play_circle_filled,
+                              playing ? Symbols.pause_circle_rounded : Symbols.play_circle_rounded,
+                              fill: 1,
                               color: Colors.white,
                               size: 54,
                             ),
@@ -746,7 +748,7 @@ class _PlayerSurfaceState extends State<_PlayerSurface>
                           IconButton(
                             tooltip: 'Forward 10 seconds',
                             onPressed: () => onSeekRelative(const Duration(seconds: 10)),
-                            icon: const Icon(Icons.forward_10, color: Colors.white, size: 34),
+                            icon: const Icon(Symbols.forward_10_rounded, color: Colors.white, size: 34),
                           ),
                         ],
                       ),
@@ -764,13 +766,13 @@ class _PlayerSurfaceState extends State<_PlayerSurface>
                             IconButton(
                               tooltip: 'Mini player',
                               onPressed: widget.onMiniToggle,
-                              icon: const Icon(Icons.picture_in_picture, color: Colors.white),
+                              icon: const Icon(Symbols.picture_in_picture_rounded, color: Colors.white),
                             ),
                             IconButton(
                               tooltip: isFullscreen ? 'Exit fullscreen' : 'Fullscreen',
                               onPressed: onFullscreen,
                               icon: Icon(
-                                isFullscreen ? Icons.fullscreen_exit : Icons.fullscreen,
+                                isFullscreen ? Symbols.fullscreen_exit_rounded : Symbols.fullscreen_rounded,
                                 color: Colors.white,
                               ),
                             ),
@@ -881,7 +883,7 @@ class _MiniPlayerOverlayState extends State<_MiniPlayerOverlay> {
                       ),
                       IconButton(
                         onPressed: widget.onClose,
-                        icon: const Icon(Icons.close, color: Colors.white),
+                        icon: const Icon(Symbols.close_rounded, color: Colors.white),
                       ),
                     ],
                   ),
@@ -1008,7 +1010,7 @@ class _MetadataPanel extends StatelessWidget {
             const CircleAvatar(
               radius: 18,
               backgroundColor: Color(0xFFEEEEEE),
-              child: Icon(Icons.person, color: Colors.black54),
+              child: Icon(Symbols.person_rounded, color: Colors.black54),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -1037,33 +1039,33 @@ class _MetadataPanel extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             children: [
               _ActionPill(
-                icon: liked ? Icons.thumb_up : Icons.thumb_up_outlined,
+                icon: liked ? Symbols.thumb_up_rounded : Symbols.thumb_up_rounded,
                 label: likesCount.toString(),
                 active: liked,
                 onTap: onLikeToggle,
               ),
               const SizedBox(width: 10),
               _ActionPill(
-                icon: disliked ? Icons.thumb_down : Icons.thumb_down_outlined,
+                icon: disliked ? Symbols.thumb_down_rounded : Symbols.thumb_down_rounded,
                 label: AppLocalizations.of(context).t('player.action.dislike'),
                 active: disliked,
                 onTap: onDislikeToggle,
               ),
               const SizedBox(width: 10),
               _ActionPill(
-                icon: Icons.reply_outlined,
+                icon: Symbols.reply_rounded,
                 label: AppLocalizations.of(context).t('player.action.share'),
                 onTap: onShare,
               ),
               const SizedBox(width: 10),
               _ActionPill(
-                icon: Icons.download_outlined,
+                icon: Symbols.download_rounded,
                 label: AppLocalizations.of(context).t('player.action.download'),
                 onTap: onDownload,
               ),
               const SizedBox(width: 10),
               _ActionPill(
-                icon: Icons.playlist_add_outlined,
+                icon: Symbols.playlist_add_rounded,
                 label: AppLocalizations.of(context).t('player.action.save'),
                 onTap: onSave,
               ),
@@ -1213,7 +1215,7 @@ class _CommentsSection extends StatelessWidget {
                 const CircleAvatar(
                   radius: 14,
                   backgroundColor: Color(0xFFDDDDDD),
-                  child: Icon(Icons.person, size: 16, color: Colors.black54),
+                  child: Icon(Symbols.person_rounded, size: 16, color: Colors.black54),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -1234,7 +1236,7 @@ class _CommentsSection extends StatelessWidget {
                       const SizedBox(height: 4),
                       Row(
                         children: const [
-                          Icon(Icons.thumb_up_alt_outlined,
+                          Icon(Symbols.thumb_up_rounded,
                               size: 14, color: Colors.black54),
                           SizedBox(width: 4),
                           Text('24', style: TextStyle(fontSize: 12)),
@@ -1282,7 +1284,7 @@ class _RecommendationsSection extends StatelessWidget {
                     color: const Color(0xFFDDDDDD),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.play_arrow, color: Colors.black54),
+                  child: const Icon(Symbols.play_arrow_rounded, color: Colors.black54),
                 ),
                 const SizedBox(width: 10),
                 Expanded(

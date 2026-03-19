@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../data/video_item.dart';
@@ -139,28 +140,28 @@ class _HomeShellState extends State<HomeShell> {
         onDestinationSelected: (i) => setState(() => _index = i),
         destinations: [
           NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
+            icon: Icon(Symbols.home_rounded),
+            selectedIcon: Icon(Symbols.home_rounded),
             label: l.t('nav.home'),
           ),
           NavigationDestination(
-            icon: Icon(Icons.play_arrow_outlined),
-            selectedIcon: Icon(Icons.play_arrow),
+            icon: Icon(Symbols.play_arrow_rounded),
+            selectedIcon: Icon(Symbols.play_arrow_rounded),
             label: l.t('nav.shorts'),
           ),
           NavigationDestination(
-            icon: Icon(Icons.add_circle_outline),
-            selectedIcon: Icon(Icons.add_circle),
+            icon: Icon(Symbols.add_circle_rounded),
+            selectedIcon: Icon(Symbols.add_circle_rounded),
             label: '',
           ),
           NavigationDestination(
-            icon: Icon(Icons.subscriptions_outlined),
-            selectedIcon: Icon(Icons.subscriptions),
+            icon: Icon(Symbols.subscriptions_rounded),
+            selectedIcon: Icon(Symbols.subscriptions_rounded),
             label: l.t('nav.subscriptions'),
           ),
           NavigationDestination(
-            icon: Icon(Icons.video_library_outlined),
-            selectedIcon: Icon(Icons.video_library),
+            icon: Icon(Symbols.video_library_rounded),
+            selectedIcon: Icon(Symbols.video_library_rounded),
             label: l.t('nav.you'),
           ),
         ],
@@ -194,7 +195,7 @@ class _PublishScreen extends StatelessWidget {
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 _CreateTile(
-                  icon: Icons.upload_file,
+                  icon: Symbols.upload_file_rounded,
                   title: 'Upload videos',
                   subtitle: 'Upload from your device',
                   onTap: () {
@@ -202,7 +203,7 @@ class _PublishScreen extends StatelessWidget {
                   },
                 ),
                 _CreateTile(
-                  icon: Icons.live_tv,
+                  icon: Symbols.live_tv_rounded,
                   title: 'Go live',
                   subtitle: 'Stream in real time',
                   onTap: () {
@@ -210,7 +211,7 @@ class _PublishScreen extends StatelessWidget {
                   },
                 ),
                 _CreateTile(
-                  icon: Icons.videocam,
+                  icon: Symbols.videocam_rounded,
                   title: 'Create a Short',
                   subtitle: 'Create short videos',
                   onTap: () {
@@ -233,7 +234,7 @@ class _PublishScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.folder_open),
+              leading: const Icon(Symbols.folder_open_rounded),
               title: const Text('Choose from device'),
               onTap: () {
                 Navigator.pop(ctx);
@@ -243,7 +244,7 @@ class _PublishScreen extends StatelessWidget {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.cloud_upload),
+              leading: const Icon(Symbols.cloud_upload_rounded),
               title: const Text('Upload from link'),
               onTap: () {
                 Navigator.pop(ctx);
@@ -266,7 +267,7 @@ class _PublishScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.videocam),
+              leading: const Icon(Symbols.videocam_rounded),
               title: const Text('Stream with camera'),
               onTap: () {
                 Navigator.pop(ctx);
@@ -276,7 +277,7 @@ class _PublishScreen extends StatelessWidget {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.screen_share),
+              leading: const Icon(Symbols.screen_share_rounded),
               title: const Text('Stream screen'),
               onTap: () {
                 Navigator.pop(ctx);
@@ -299,7 +300,7 @@ class _PublishScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.videocam),
+              leading: const Icon(Symbols.videocam_rounded),
               title: const Text('Record a Short'),
               onTap: () {
                 Navigator.pop(ctx);
@@ -309,7 +310,7 @@ class _PublishScreen extends StatelessWidget {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.photo_library),
+              leading: const Icon(Symbols.photo_library_rounded),
               title: const Text('Create from photos'),
               onTap: () {
                 Navigator.pop(ctx);
@@ -349,7 +350,7 @@ class _CreateTile extends StatelessWidget {
         ),
         title: Text(title),
         subtitle: Text(subtitle),
-        trailing: const Icon(Icons.chevron_right),
+        trailing: const Icon(Symbols.chevron_right_rounded),
         onTap: onTap,
       ),
     );
@@ -361,6 +362,29 @@ class _SubscriptionsScreen extends StatelessWidget {
 
   final Future<void> Function(VideoItem) onOpenVideo;
 
+  void _showManageSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: const Text('Manage subscriptions'),
+              leading: const Icon(Symbols.settings_rounded),
+              onTap: () => Navigator.pop(ctx),
+            ),
+            ListTile(
+              title: const Text('Turn on all notifications'),
+              leading: const Icon(Symbols.notifications_rounded),
+              onTap: () => Navigator.pop(ctx),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -371,6 +395,12 @@ class _SubscriptionsScreen extends StatelessWidget {
       const _ChannelEntry(name: 'Funny Animals', newCount: 3, latest: 'Best of the week'),
       const _ChannelEntry(name: 'Learning Channel', newCount: 0, latest: 'Math tips'),
     ];
+    // Видео от подписанных каналов — для демо берём общую ленту (как на главной)
+    final subscribedChannelNames = channels.map((c) => c.name.toLowerCase()).toSet();
+    final feedVideos = demoFeed.where((v) {
+      return subscribedChannelNames.any((name) => v.channelName.toLowerCase().contains(name) || name.contains(v.channelName.toLowerCase()));
+    }).toList();
+    final videos = feedVideos.isEmpty ? demoFeed : feedVideos;
 
     return SafeArea(
       child: Column(
@@ -389,88 +419,111 @@ class _SubscriptionsScreen extends StatelessWidget {
                   ),
                 ),
                 TextButton(
-                  onPressed: () {
-                    showModalBottomSheet<void>(
-                      context: context,
-                      builder: (ctx) => SafeArea(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            ListTile(
-                              title: const Text('Manage subscriptions'),
-                              leading: const Icon(Icons.settings),
-                              onTap: () => Navigator.pop(ctx),
-                            ),
-                            ListTile(
-                              title: const Text('Turn on all notifications'),
-                              leading: const Icon(Icons.notifications),
-                              onTap: () => Navigator.pop(ctx),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
+                  onPressed: () => _showManageSheet(context),
                   child: const Text('Manage'),
                 ),
               ],
             ),
           ),
-          Expanded(
+          // Строка каналов с аватарками
+          SizedBox(
+            height: 112,
             child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               itemCount: channels.length,
               itemBuilder: (context, index) {
                 final ch = channels[index];
-                return ListTile(
-                  contentPadding: const EdgeInsets.symmetric(vertical: 4),
-                  leading: CircleAvatar(
-                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                    child: Text(
-                      ch.name.characters.first.toUpperCase(),
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurface,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  title: Row(
-                    children: [
-                      Expanded(child: Text(ch.name)),
-                      if (ch.newCount > 0)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary,
-                            borderRadius: BorderRadius.circular(10),
+                return Padding(
+                  padding: const EdgeInsets.only(right: 20),
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => _ChannelFeedScreen(
+                            channelName: ch.name,
+                            videos: demoFeed,
+                            onOpenVideo: onOpenVideo,
                           ),
+                        ),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(999),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            CircleAvatar(
+                              radius: 32,
+                              backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                              child: Text(
+                                ch.name.characters.first.toUpperCase(),
+                                style: TextStyle(
+                                  color: theme.colorScheme.onSurface,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 24,
+                                ),
+                              ),
+                            ),
+                            if (ch.newCount > 0)
+                              Positioned(
+                                right: 0,
+                                top: 0,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primary,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Text(
+                                    '${ch.newCount}',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: theme.colorScheme.onPrimary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        SizedBox(
+                          width: 64,
                           child: Text(
-                            '${ch.newCount} new',
-                            style: TextStyle(
+                            ch.name,
+                            maxLines: 2,
+                            textAlign: TextAlign.center,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
                               fontSize: 12,
-                              color: theme.colorScheme.onPrimary,
                             ),
                           ),
                         ),
-                    ],
+                      ],
+                    ),
                   ),
-                  subtitle: Text(
-                    ch.newCount > 0 ? 'New: ${ch.latest}' : ch.latest,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Список видео карточками (как на главной)
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.only(bottom: 16),
+              itemCount: videos.length,
+              itemBuilder: (context, i) {
+                final item = videos[i];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: VideoListItem(
+                    video: item,
+                    onTap: () => onOpenVideo(item),
                   ),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => _ChannelFeedScreen(
-                          channelName: ch.name,
-                          videos: demoFeed,
-                          onOpenVideo: onOpenVideo,
-                        ),
-                      ),
-                    );
-                  },
                 );
               },
             ),
@@ -509,14 +562,14 @@ class _ChannelFeedScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(channelName),
         actions: [
-          IconButton(icon: const Icon(Icons.notifications_none), onPressed: () {}),
-          IconButton(icon: const Icon(Icons.search), onPressed: () {}),
+          IconButton(icon: const Icon(Symbols.notifications_rounded), onPressed: () {}),
+          IconButton(icon: const Icon(Symbols.search_rounded), onPressed: () {}),
         ],
       ),
       body: ListView.separated(
         padding: const EdgeInsets.symmetric(vertical: 12),
         itemCount: videos.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 12),
+        separatorBuilder: (_, __) => const SizedBox(height: 6),
         itemBuilder: (context, i) {
           final item = videos[i];
           return Padding(
@@ -543,28 +596,28 @@ class _LibraryScreen extends StatelessWidget {
     final l = AppLocalizations.of(context);
     final sections = <_LibraryItem>[
       _LibraryItem(
-        icon: Icons.history,
+        icon: Symbols.history_rounded,
         label: l.t('you.history'),
         description: l.t('you.historyDesc'),
       ),
       _LibraryItem(
-        icon: Icons.playlist_play,
+        icon: Symbols.playlist_play_rounded,
         label: l.t('you.yourVideos'),
         description: l.t('you.yourVideosDesc'),
       ),
       _LibraryItem(
-        icon: Icons.file_download_outlined,
+        icon: Symbols.download_rounded,
         label: l.t('you.downloads'),
         description: l.t('you.downloadsDesc'),
       ),
       _LibraryItem(
-        icon: Icons.video_library,
+        icon: Symbols.video_library_rounded,
         label: l.t('you.playlists'),
         description: l.t('you.playlistsDesc'),
       ),
     ];
 
-    const userAvatar = Icon(Icons.person, size: 44);
+    const userAvatar = Icon(Symbols.person_rounded, size: 44);
     const userName = 'Sany';
     const userHandle = '@sanyyyvfx';
     const userExtra = 'Private profile';
@@ -619,7 +672,7 @@ class _LibraryScreen extends StatelessWidget {
                         ),
                       );
                     },
-                    icon: const Icon(Icons.settings_outlined),
+                    icon: const Icon(Symbols.settings_rounded),
                   ),
                 ],
               ),
@@ -638,7 +691,7 @@ class _LibraryScreen extends StatelessWidget {
                           color: theme.colorScheme.onSurface),
                       title: Text(item.label),
                       subtitle: Text(item.description),
-                      trailing: const Icon(Icons.chevron_right),
+                      trailing: const Icon(Symbols.chevron_right_rounded),
                       onTap: () {
                         Navigator.of(context).push(
                           MaterialPageRoute<void>(
@@ -689,8 +742,8 @@ class _LibrarySectionScreen extends StatelessWidget {
           ],
         ),
         actions: [
-          IconButton(icon: const Icon(Icons.search), onPressed: () {}),
-          IconButton(icon: const Icon(Icons.more_vert), onPressed: () {}),
+          IconButton(icon: const Icon(Symbols.search_rounded), onPressed: () {}),
+          IconButton(icon: const Icon(Symbols.more_vert_rounded), onPressed: () {}),
         ],
       ),
       body: videos.isEmpty
@@ -710,18 +763,18 @@ class _LibrarySectionScreen extends StatelessWidget {
           : ListView.separated(
               padding: const EdgeInsets.symmetric(vertical: 12),
               itemCount: videos.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, i) {
-                final item = videos[i];
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: VideoListItem(
-                    video: item,
-                    onTap: () => onOpenVideo(item),
-                  ),
-                );
-              },
-            ),
+separatorBuilder: (_, __) => const SizedBox(height: 6),
+          itemBuilder: (context, i) {
+            final item = videos[i];
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: VideoListItem(
+                video: item,
+                onTap: () => onOpenVideo(item),
+              ),
+            );
+          },
+        ),
     );
   }
 }
@@ -759,11 +812,58 @@ class _MiniPlayerOverlayState extends State<_MiniPlayerOverlay> {
   Offset _offset = const Offset(16, 16);
 
   @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_onVideoTick);
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onVideoTick);
+    super.dispose();
+  }
+
+  void _onVideoTick() {
+    if (mounted) setState(() {});
+  }
+
+  void _togglePlayPause() {
+    final c = widget.controller;
+    if (!c.value.isInitialized) return;
+    if (c.value.isPlaying) {
+      c.pause();
+    } else {
+      c.play();
+    }
+    setState(() {});
+  }
+
+  void _seekFromLocalX(double localX, double barWidth) {
+    final c = widget.controller;
+    if (!c.value.isInitialized || barWidth <= 0) return;
+    final d = c.value.duration;
+    if (d.inMilliseconds <= 0) return;
+    final f = (localX / barWidth).clamp(0.0, 1.0);
+    final ms = (d.inMilliseconds * f).round().clamp(0, d.inMilliseconds);
+    c.seekTo(Duration(milliseconds: ms));
+  }
+
+  @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final width = size.width * 0.5;
-    final height = width * 9 / 16 + 40;
+    const progressH = 4.0;
+    const titleBarH = 44.0;
+    final videoH = width * 9 / 16;
+    final totalHeight = videoH + progressH + titleBarH;
     final initialized = widget.controller.value.isInitialized;
+    final v = widget.controller.value;
+    final duration = v.duration;
+    final position = v.position;
+    final progress = duration.inMilliseconds > 0
+        ? (position.inMilliseconds / duration.inMilliseconds).clamp(0.0, 1.0)
+        : 0.0;
+    final playing = v.isPlaying;
 
     return Positioned(
       right: _offset.dx,
@@ -772,55 +872,151 @@ class _MiniPlayerOverlayState extends State<_MiniPlayerOverlay> {
         onPanUpdate: (details) {
           setState(() {
             _offset = Offset(
-              (_offset.dx - details.delta.dx).clamp(8, size.width - width - 8),
-              (_offset.dy - details.delta.dy).clamp(8, size.height - height - 8),
+              (_offset.dx - details.delta.dx)
+                  .clamp(8, size.width - width - 8),
+              (_offset.dy - details.delta.dy).clamp(
+                8,
+                size.height - totalHeight - 8,
+              ),
             );
           });
         },
-        onTap: widget.onTap,
+        behavior: HitTestBehavior.deferToChild,
         child: Material(
-          elevation: 8,
+          elevation: 12,
+          shadowColor: Colors.black54,
           borderRadius: BorderRadius.circular(12),
           clipBehavior: Clip.antiAlias,
           child: SizedBox(
             width: width,
-            height: height,
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Expanded(
-                  child: Container(
-                    color: Colors.black,
-                    child: initialized
-                        ? FittedBox(
-                            fit: BoxFit.cover,
-                            child: SizedBox(
-                              width: widget.controller.value.size.width,
-                              height: widget.controller.value.size.height,
-                              child: VideoPlayer(widget.controller),
+                SizedBox(
+                  height: videoH,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      ColoredBox(
+                        color: Colors.black,
+                        child: initialized
+                            ? FittedBox(
+                                fit: BoxFit.cover,
+                                child: SizedBox(
+                                  width: v.size.width,
+                                  height: v.size.height,
+                                  child: VideoPlayer(widget.controller),
+                                ),
+                              )
+                            : const Center(
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                      ),
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: widget.onTap,
+                          child: const SizedBox.expand(),
+                        ),
+                      ),
+                      if (initialized && !playing)
+                        Center(
+                          child: Material(
+                            color: Colors.black45,
+                            shape: const CircleBorder(),
+                            child: IconButton(
+                              onPressed: _togglePlayPause,
+                              icon: const Icon(
+                                Symbols.play_arrow_rounded,
+                                color: Colors.white,
+                                size: 36,
+                                fill: 1,
+                              ),
                             ),
-                          )
-                        : const Center(
-                            child: CircularProgressIndicator(color: Colors.white),
                           ),
+                        ),
+                    ],
                   ),
                 ),
+                // Шкала прогресса (тап / перетаскивание для перемотки)
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final barW = constraints.maxWidth;
+                    return GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTapDown: (d) =>
+                          _seekFromLocalX(d.localPosition.dx, barW),
+                      onHorizontalDragUpdate: (d) =>
+                          _seekFromLocalX(d.localPosition.dx, barW),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(1),
+                        child: SizedBox(
+                          height: progressH,
+                          width: barW,
+                          child: LinearProgressIndicator(
+                            value: progress,
+                            minHeight: progressH,
+                            backgroundColor: Colors.white24,
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                              Color(0xFFFF0000),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
                 Container(
-                  color: Colors.black87,
-                  height: 40,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  height: titleBarH,
+                  color: const Color(0xFF1A1A1A),
+                  padding: const EdgeInsets.only(left: 8, right: 4),
                   child: Row(
                     children: [
+                      IconButton(
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 36,
+                          minHeight: 36,
+                        ),
+                        onPressed: _togglePlayPause,
+                        icon: Icon(
+                          playing ? Symbols.pause_rounded : Symbols.play_arrow_rounded,
+                          color: Colors.white,
+                          size: 22,
+                          fill: 1,
+                        ),
+                      ),
                       Expanded(
-                        child: Text(
-                          widget.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(color: Colors.white),
+                        child: GestureDetector(
+                          onTap: widget.onTap,
+                          child: Text(
+                            widget.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                            ),
+                          ),
                         ),
                       ),
                       IconButton(
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 36,
+                          minHeight: 36,
+                        ),
                         onPressed: widget.onClose,
-                        icon: const Icon(Icons.close, color: Colors.white),
+                        icon: const Icon(
+                          Symbols.close_rounded,
+                          color: Colors.white,
+                          size: 22,
+                        ),
                       ),
                     ],
                   ),

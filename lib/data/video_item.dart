@@ -6,6 +6,7 @@ class VideoItem {
     required this.channelName,
     required this.viewsText,
     required this.publishedText,
+    this.durationText,
   });
 
   /// Direct media URL (mp4/hls) that we control (admin-provided).
@@ -18,4 +19,7 @@ class VideoItem {
   final String channelName;
   final String viewsText;
   final String publishedText;
+
+  /// Duration shown on thumbnail, e.g. "6:03".
+  final String? durationText;
 }

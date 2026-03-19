@@ -1,10 +1,12 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../data/short_item.dart';
+import 'shorts_comments_sheet.dart';
 
 class ShortsScreen extends StatefulWidget {
   const ShortsScreen({
@@ -147,36 +149,50 @@ class _ShortsScreenState extends State<ShortsScreen> {
     });
   }
 
-  Future<void> _openCommentDialog(int index) async {
-    final controller = TextEditingController();
-    final comment = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(AppLocalizations.of(ctx).t('shorts.dialog.commentTitle')),
-        content: TextField(
-          controller: controller,
-          maxLines: 3,
-          decoration: InputDecoration(
-            hintText: AppLocalizations.of(ctx).t('shorts.dialog.commentHint'),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(AppLocalizations.of(ctx).t('shorts.dialog.cancel')),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.of(ctx).pop(controller.text.trim());
-            },
-            child: Text(AppLocalizations.of(ctx).t('shorts.dialog.send')),
-          ),
-        ],
+  List<ShortsComment> _demoCommentsFor(int index) {
+    return [
+      ShortsComment(
+        authorHandle: '@pmx2n',
+        authorAvatarUrl: null,
+        text: 'Отличное исполнение! Жду ещё таких шортсов.',
+        timeAgo: '1 г. назад',
+        likeCount: 1800,
+        isPinned: true,
+        pinnedByHandle: '@pmx2n',
+        replyCount: 40,
+        isVerified: true,
+        creatorLiked: true,
       ),
-    );
+      ShortsComment(
+        authorHandle: '@user_kk',
+        authorAvatarUrl: null,
+        text: 'Супер, подписался на канал 👍',
+        timeAgo: '2 мес. назад',
+        likeCount: 234,
+        replyCount: 5,
+      ),
+      ShortsComment(
+        authorHandle: '@music_fan',
+        authorAvatarUrl: null,
+        text: 'Как называется эта композиция?',
+        timeAgo: '1 нед. назад',
+        likeCount: 89,
+        replyCount: 12,
+      ),
+    ];
+  }
 
-    if (!mounted || comment == null || comment.isEmpty) return;
-    setState(() => _commentCounts[index] += 1);
+  void _openCommentsSheet(int index) {
+    final comments = _demoCommentsFor(index);
+    showShortsCommentsSheet(
+      context,
+      commentCount: _commentCounts[index],
+      comments: comments,
+      onSendComment: (text) {
+        if (!mounted) return;
+        setState(() => _commentCounts[index] += 1);
+      },
+    );
   }
 
   void _shareShort(int index) {
@@ -187,7 +203,7 @@ class _ShortsScreenState extends State<ShortsScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.link),
+              leading: const Icon(Symbols.link_rounded),
               title: Text(AppLocalizations.of(ctx).t('shorts.sheet.copyLink')),
               onTap: () {
                 Navigator.pop(ctx);
@@ -200,7 +216,7 @@ class _ShortsScreenState extends State<ShortsScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.share),
+              leading: const Icon(Symbols.share_rounded),
               title: Text(AppLocalizations.of(ctx).t('shorts.sheet.share')),
               onTap: () => Navigator.pop(ctx),
             ),
@@ -268,9 +284,10 @@ class _ShortsScreenState extends State<ShortsScreen> {
                   AnimatedOpacity(
                     opacity: _isPlaying ? 0.0 : 1.0,
                     duration: const Duration(milliseconds: 200),
-                    child: const Center(
+                    child: Center(
                       child: Icon(
-                        Icons.play_circle_fill,
+                        Symbols.play_circle_rounded,
+                        fill: 1,
                         color: Colors.white70,
                         size: 72,
                       ),
@@ -284,7 +301,7 @@ class _ShortsScreenState extends State<ShortsScreen> {
                       IconButton(
                         onPressed: () => _toggleLike(index),
                         icon: Icon(
-                          Icons.thumb_up_outlined,
+                          Symbols.thumb_up_rounded,
                           color: liked ? Colors.redAccent : Colors.white70,
                           size: 28,
                         ),
@@ -301,16 +318,16 @@ class _ShortsScreenState extends State<ShortsScreen> {
                       IconButton(
                         onPressed: () => _toggleDislike(index),
                         icon: Icon(
-                          Icons.thumb_down_outlined,
+                          Symbols.thumb_down_rounded,
                           color: disliked ? Colors.redAccent : Colors.white70,
                           size: 28,
                         ),
                       ),
                       const SizedBox(height: 16),
                       IconButton(
-                        onPressed: () => _openCommentDialog(index),
+                        onPressed: () => _openCommentsSheet(index),
                         icon: const Icon(
-                          Icons.comment_outlined,
+                          Symbols.comment_rounded,
                           color: Colors.white,
                           size: 28,
                         ),
@@ -327,7 +344,7 @@ class _ShortsScreenState extends State<ShortsScreen> {
                       IconButton(
                         onPressed: () => _shareShort(index),
                         icon: const Icon(
-                          Icons.share_outlined,
+                          Symbols.share_rounded,
                           color: Colors.white,
                           size: 28,
                         ),
@@ -361,7 +378,7 @@ class _ShortsScreenState extends State<ShortsScreen> {
                         style: FilledButton.styleFrom(
                           backgroundColor: subscribed
                               ? Colors.white10
-                              : Colors.red.withOpacity(0.9),
+                              : Colors.red.withValues(alpha: 0.9),
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(999),

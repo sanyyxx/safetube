@@ -13,6 +13,7 @@ const demoFeed = <VideoItem>[
     channelName: 'Channel',
     viewsText: '1.2M views',
     publishedText: '2 days ago',
+    durationText: '6:03',
   ),
   VideoItem(
     playbackUrl:
@@ -23,6 +24,7 @@ const demoFeed = <VideoItem>[
     channelName: 'Cat Studio',
     viewsText: '540K views',
     publishedText: '1 week ago',
+    durationText: '4:12',
   ),
   VideoItem(
     playbackUrl:
@@ -33,6 +35,7 @@ const demoFeed = <VideoItem>[
     channelName: 'Night Lens',
     viewsText: '2.3M views',
     publishedText: '3 weeks ago',
+    durationText: '8:41',
   ),
 ];
 

@@ -27,6 +27,10 @@
   "dialog.search.cancel": "БАС ТАРТУ",
   "dialog.search.apply": "ҚОЛДАНУ",
 
+  "search.hintYouTube": "YouTube-да іздеу",
+  "search.voiceUnavailable": "Дауыстық іздеу қолжетімсіз",
+  "search.noResults": "Ештеңе табылмады",
+
   "you.title": "You",
   "you.history": "Тарих",
   "you.yourVideos": "Сіздің видеоларыңыз",
@@ -89,6 +93,11 @@
   "shorts.sheet.copyLink": "Сілтемені көшіру",
   "shorts.sheet.share": "Бөлісу…",
   "shorts.sheet.linkCopied": "Сілтеме көшірілді",
+  "shorts.commentsTitle": "Пікірлер",
+  "shorts.commentPlaceholder": "Пікір енгізіңіз",
+  "shorts.pinnedBy": "Пайдаланушы бекіткен",
+  "shorts.repliesCount": "%s жауап",
+  "shorts.filterComments": "Сұрыптау",
 
   "nav.home": "Басты бет",
   "nav.shorts": "Shorts",

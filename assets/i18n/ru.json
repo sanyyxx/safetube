@@ -27,6 +27,10 @@
   "dialog.search.cancel": "ОТМЕНА",
   "dialog.search.apply": "ПРИМЕНИТЬ",
 
+  "search.hintYouTube": "Поиск на YouTube",
+  "search.voiceUnavailable": "Голосовой поиск недоступен",
+  "search.noResults": "Ничего не найдено",
+
   "you.title": "You",
   "you.history": "История",
   "you.yourVideos": "Ваши видео",
@@ -89,6 +93,11 @@
   "shorts.sheet.copyLink": "Скопировать ссылку",
   "shorts.sheet.share": "Поделиться…",
   "shorts.sheet.linkCopied": "Ссылка скопирована",
+  "shorts.commentsTitle": "Комментарии",
+  "shorts.commentPlaceholder": "Введите текст комментария",
+  "shorts.pinnedBy": "Закреплено пользователем",
+  "shorts.repliesCount": "%s ответов",
+  "shorts.filterComments": "Сортировка",
 
   "nav.home": "Главная",
   "nav.shorts": "Shorts",
