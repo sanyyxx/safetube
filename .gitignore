@@ -1,4 +1,5 @@
 # Flutter / Dart
+.flutter_sdk/
 .dart_tool/
 .packages
 .flutter-plugins

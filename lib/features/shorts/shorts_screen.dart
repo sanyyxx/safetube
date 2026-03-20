@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:video_player/video_player.dart';
 
@@ -149,13 +150,13 @@ class _ShortsScreenState extends State<ShortsScreen> {
     });
   }
 
-  List<ShortsComment> _demoCommentsFor(int index) {
+  List<ShortsComment> _demoCommentsFor(int index, AppLocalizations l) {
     return [
       ShortsComment(
         authorHandle: '@pmx2n',
         authorAvatarUrl: null,
-        text: 'Отличное исполнение! Жду ещё таких шортсов.',
-        timeAgo: '1 г. назад',
+        text: l.t('shorts.demo.comment1.text'),
+        timeAgo: l.t('shorts.demo.comment1.timeAgo'),
         likeCount: 1800,
         isPinned: true,
         pinnedByHandle: '@pmx2n',
@@ -166,16 +167,16 @@ class _ShortsScreenState extends State<ShortsScreen> {
       ShortsComment(
         authorHandle: '@user_kk',
         authorAvatarUrl: null,
-        text: 'Супер, подписался на канал 👍',
-        timeAgo: '2 мес. назад',
+        text: l.t('shorts.demo.comment2.text'),
+        timeAgo: l.t('shorts.demo.comment2.timeAgo'),
         likeCount: 234,
         replyCount: 5,
       ),
       ShortsComment(
         authorHandle: '@music_fan',
         authorAvatarUrl: null,
-        text: 'Как называется эта композиция?',
-        timeAgo: '1 нед. назад',
+        text: l.t('shorts.demo.comment3.text'),
+        timeAgo: l.t('shorts.demo.comment3.timeAgo'),
         likeCount: 89,
         replyCount: 12,
       ),
@@ -183,7 +184,8 @@ class _ShortsScreenState extends State<ShortsScreen> {
   }
 
   void _openCommentsSheet(int index) {
-    final comments = _demoCommentsFor(index);
+    final l = AppLocalizations.of(context);
+    final comments = _demoCommentsFor(index, l);
     showShortsCommentsSheet(
       context,
       commentCount: _commentCounts[index],
@@ -234,8 +236,11 @@ class _ShortsScreenState extends State<ShortsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? Colors.black : Colors.white;
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: bg,
       body: PageView.builder(
         controller: _pageController,
         scrollDirection: Axis.vertical,
@@ -258,7 +263,11 @@ class _ShortsScreenState extends State<ShortsScreen> {
           return Semantics(
             container: true,
             button: true,
-            label: isCurrent ? (_isPlaying ? 'Pause short' : 'Play short') : 'Short',
+            label: isCurrent
+                ? (_isPlaying
+                    ? l.t('shorts.semantics.pauseShort')
+                    : l.t('shorts.semantics.playShort'))
+                : l.t('shorts.semantics.short'),
             onTap: () {
               _togglePlayPause();
             },
@@ -280,9 +289,15 @@ class _ShortsScreenState extends State<ShortsScreen> {
                               child: VideoPlayer(controller),
                             ),
                           )
-                        : Image.network(
-                            s.thumbnailUrl,
+                        : CachedNetworkImage(
+                            imageUrl: s.thumbnailUrl,
                             fit: BoxFit.cover,
+                            placeholder: (_, __) => const ColoredBox(
+                              color: Color(0xFFEEEEEE),
+                            ),
+                            errorWidget: (_, __, ___) => const ColoredBox(
+                              color: Color(0xFFEEEEEE),
+                            ),
                           ),
                   ),
                 ),

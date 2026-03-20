@@ -5,6 +5,7 @@ import '../../data/video_store.dart';
 import '../../data/video_item.dart';
 import 'widgets/video_list_item.dart';
 import 'search_screen.dart';
+import 'youtube_search_screen.dart';
 import '../../l10n/app_localizations.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -79,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _showSearchDialog() async {
     final result = await Navigator.of(context).push<String>(
       MaterialPageRoute(
-        builder: (context) => SearchScreen(
+        builder: (context) => YouTubeSearchScreen(
           initialQuery: _searchQuery,
           history: List<SearchHistoryEntry>.from(_searchHistory),
           onSearch: (query) {
@@ -109,6 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showCastSheet() {
+    final l = AppLocalizations.of(context);
     showModalBottomSheet<void>(
       context: context,
       builder: (ctx) => SafeArea(
@@ -125,22 +127,20 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Connect to a TV or other device to play video on a bigger screen.',
-              ),
+              Text(l.t('home.cast.connectToTv')),
               const SizedBox(height: 16),
               ListTile(
                 leading: const Icon(Symbols.tv_rounded),
-                title: const Text('Chromecast'),
-                subtitle: const Text('Not connected'),
+                title: Text(l.t('home.cast.chromecast')),
+                subtitle: Text(l.t('home.cast.notConnected')),
                 onTap: () {
                   Navigator.pop(ctx);
-                  _showSimpleSnack('Searching for devices…');
+                  _showSimpleSnack(l.t('home.cast.searchingDevices'));
                 },
               ),
               ListTile(
                 leading: const Icon(Symbols.help_outline_rounded),
-                title: const Text('Help'),
+                title: Text(l.t('home.cast.help')),
                 onTap: () => Navigator.pop(ctx),
               ),
             ],
@@ -170,19 +170,25 @@ class _HomeScreenState extends State<HomeScreen> {
                   const Spacer(),
                   TextButton(
                     onPressed: () => Navigator.pop(ctx),
-                    child: const Text('Mark all as read'),
+                    child: Text(
+                      AppLocalizations.of(ctx).t('home.notifications.markAllAsRead'),
+                    ),
                   ),
                 ],
               ),
             ),
-            const Padding(
+            Padding(
               padding: EdgeInsets.symmetric(horizontal: 24, vertical: 32),
               child: Column(
                 children: [
-                  Icon(Symbols.notifications_rounded, size: 64, color: Colors.grey),
+                  Icon(
+                    Symbols.notifications_rounded,
+                    size: 64,
+                    color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                  ),
                   SizedBox(height: 16),
                   Text(
-                    'You\'re all caught up',
+                    AppLocalizations.of(ctx).t('home.notifications.caughtUpTitle'),
                     style: TextStyle(
                       fontWeight: FontWeight.w500,
                       fontSize: 16,
@@ -190,8 +196,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   SizedBox(height: 4),
                   Text(
-                    'No new notifications',
-                    style: TextStyle(color: Colors.grey),
+                    AppLocalizations.of(ctx).t('home.notifications.noNewNotifications'),
+                    style: TextStyle(color: Theme.of(ctx).colorScheme.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -203,15 +209,16 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showExploreSheet() {
-    final topics = <String>[
-      'Music',
-      'Gaming',
-      'Sports',
-      'News',
-      'Learning',
-      'Fashion',
-      'Science',
-      'Cooking',
+    final l = AppLocalizations.of(context);
+    final topics = <Map<String, String>>[
+      {'id': 'music', 'label': l.t('home.topic.music')},
+      {'id': 'gaming', 'label': l.t('home.topic.gaming')},
+      {'id': 'sports', 'label': l.t('home.topic.sports')},
+      {'id': 'news', 'label': l.t('home.topic.news')},
+      {'id': 'learning', 'label': l.t('home.topic.learning')},
+      {'id': 'fashion', 'label': l.t('home.topic.fashion')},
+      {'id': 'science', 'label': l.t('home.topic.science')},
+      {'id': 'cooking', 'label': l.t('home.topic.cooking')},
     ];
     showModalBottomSheet<void>(
       context: context,
@@ -235,15 +242,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: topics
                     .map(
                       (t) => ActionChip(
-                        label: Text(t),
+                        label: Text(t['label'] ?? ''),
                         onPressed: () {
                           Navigator.pop(ctx);
-                          final mapped = switch (t) {
-                            'News' => 'newToYou',
-                            'Learning' => 'programming',
-                            'Science' => 'programming',
-                            'Cooking' => 'cooking',
-                            'Fashion' => 'diy',
+                          final id = t['id'] ?? 'all';
+                          final mapped = switch (id) {
+                            'news' => 'newToYou',
+                            'learning' => 'programming',
+                            'science' => 'programming',
+                            'cooking' => 'cooking',
+                            'fashion' => 'diy',
                             _ => 'all',
                           };
                           _updateFilter(mapped);
@@ -290,27 +298,28 @@ class _HomeScreenState extends State<HomeScreen> {
                     await showDialog<void>(
                       context: context,
                       builder: (context) {
+                      final l = AppLocalizations.of(context);
                         final controller = TextEditingController();
                         return AlertDialog(
-                          title: const Text('Send feedback'),
+                        title: Text(l.t('home.feedback.title')),
                           content: TextField(
                             controller: controller,
                             maxLines: 4,
-                            decoration: const InputDecoration(
-                              hintText: 'Tell us what you think',
+                          decoration: InputDecoration(
+                            hintText: l.t('home.feedback.hint'),
                             ),
                           ),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.of(context).pop(),
-                              child: const Text('CANCEL'),
+                            child: Text(l.t('home.feedback.cancel')),
                             ),
                             FilledButton(
                               onPressed: () {
                                 Navigator.of(context).pop();
-                                _showSimpleSnack('Thanks for your feedback!');
+                              _showSimpleSnack(l.t('home.feedback.thanks'));
                               },
-                              child: const Text('SEND'),
+                            child: Text(l.t('home.feedback.send')),
                             ),
                           ],
                         );
@@ -365,7 +374,7 @@ class _TopBar extends StatelessWidget {
       child: Row(
         children: [
           Semantics(
-            label: 'YouTube',
+            label: l.t('app.youtube'),
             child: const Icon(Symbols.smart_display_rounded, color: Colors.red, size: 28),
           ),
           const SizedBox(width: 6),
@@ -392,7 +401,7 @@ class _TopBar extends StatelessWidget {
             icon: const Icon(Symbols.search_rounded),
           ),
           Semantics(
-            label: 'Profile',
+            label: l.t('nav.you'),
             button: true,
             child: InkWell(
               onTap: onProfile,

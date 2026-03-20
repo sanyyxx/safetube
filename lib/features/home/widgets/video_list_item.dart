@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../data/video_item.dart';
+import '../../../l10n/app_localizations.dart';
 
 class VideoListItem extends StatelessWidget {
   const VideoListItem({
@@ -16,6 +17,7 @@ class VideoListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final title = video.title;
     final channel = video.channelName;
     final views = video.viewsText;
@@ -28,7 +30,10 @@ class VideoListItem extends StatelessWidget {
 
     return Semantics(
       container: true,
-      label: 'Video: $title. $meta',
+      label: l
+          .t('videoList.semantics.video')
+          .replaceAll('%title', title)
+          .replaceAll('%meta', meta),
       child: InkWell(
         onTap: onTap,
         child: Column(
@@ -82,7 +87,7 @@ class VideoListItem extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Semantics(
-                    label: 'Channel avatar',
+                    label: l.t('videoList.semantics.channelAvatar'),
                     image: true,
                     child: CircleAvatar(
                       radius: 20,
@@ -127,7 +132,7 @@ class VideoListItem extends StatelessWidget {
                     ),
                   ),
                   IconButton(
-                      tooltip: 'More actions',
+                      tooltip: l.t('videoList.moreActions'),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(
                         minWidth: 48,
@@ -148,7 +153,7 @@ class VideoListItem extends StatelessWidget {
                                   ListTile(
                                     leading:
                                         const Icon(Symbols.play_arrow_rounded),
-                                    title: const Text('Play now'),
+                                    title: Text(l.t('videoList.playNow')),
                                     onTap: () {
                                       Navigator.of(context).pop();
                                       onTap();
@@ -157,14 +162,14 @@ class VideoListItem extends StatelessWidget {
                                   ListTile(
                                     leading:
                                         const Icon(Symbols.watch_later_rounded),
-                                    title: const Text('Watch later'),
+                                    title: Text(l.t('videoList.watchLater')),
                                     onTap: () {
                                       Navigator.of(context).pop();
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
-                                        const SnackBar(
+                                        SnackBar(
                                           content: Text(
-                                            'Added to “Watch later” ',
+                                            l.t('videoList.addedToWatchLater'),
                                           ),
                                         ),
                                       );
@@ -173,15 +178,13 @@ class VideoListItem extends StatelessWidget {
                                   ListTile(
                                     leading:
                                         const Icon(Symbols.playlist_add_rounded),
-                                    title: const Text('Save to playlist'),
+                                    title: Text(l.t('videoList.saveToPlaylist')),
                                     onTap: () {
                                       Navigator.of(context).pop();
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            'Saved to playlist',
-                                          ),
+                                        SnackBar(
+                                          content: Text(l.t('videoList.savedToPlaylist')),
                                         ),
                                       );
                                     },
@@ -216,6 +219,7 @@ class VideoGridItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final title = video.title;
     final channel = video.channelName;
     final views = video.viewsText;
@@ -227,7 +231,10 @@ class VideoGridItem extends StatelessWidget {
 
     return Semantics(
       container: true,
-      label: 'Video: $title. $meta',
+      label: l
+          .t('videoList.semantics.video')
+          .replaceAll('%title', title)
+          .replaceAll('%meta', meta),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),

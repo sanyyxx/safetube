@@ -38,6 +38,7 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
   Duration _lastPosition = Duration.zero;
   int _lastProgressUiUpdateMs = 0;
   bool _keepWakelockOnDispose = false;
+  bool _enterMiniRequested = false;
   final ValueNotifier<PlayerActionsState> _actions = ValueNotifier(
     const PlayerActionsState(
       liked: false,
@@ -85,6 +86,16 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
     }
     _exitFullscreenIfNeeded();
     super.dispose();
+  }
+
+  void _requestEnterMini() {
+    if (_enterMiniRequested) return;
+    _enterMiniRequested = true;
+
+    // Мини-плеер продолжит проигрывание, поэтому wake lock нельзя
+    // выключать в dispose().
+    _keepWakelockOnDispose = true;
+    widget.onEnterMini();
   }
 
   @override
@@ -186,7 +197,7 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
                     controller: c,
                     showControls: _showControls,
                     onTap: _toggleControls,
-                    onBack: () => Navigator.of(context).maybePop(),
+                    onBack: _requestEnterMini,
                     onPlayPause: _togglePlayPause,
                     onSeekRelative: _seekRelative,
                     onScrubTo: (d) async {
@@ -197,11 +208,7 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
                     onFullscreen: _toggleFullscreen,
                     onSpeedPressed: () => _showSpeedQualitySheet(context),
                     onSettingsPressed: () => _showPlayerSettingsSheet(context),
-                    onMiniToggle: () {
-                      // Keep the wakelock enabled: mini-player is still playing.
-                      _keepWakelockOnDispose = true;
-                      widget.onEnterMini();
-                    },
+                    onMiniToggle: _requestEnterMini,
                   ),
                 if (!_isFullscreen)
                   Expanded(
@@ -255,7 +262,13 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
       ),
     );
 
-    return scaffold;
+    return WillPopScope(
+      onWillPop: () async {
+        _requestEnterMini();
+        return false; // pop выполнит callback через HomeShell
+      },
+      child: scaffold,
+    );
   }
 
   Future<void> _showSpeedQualitySheet(BuildContext context) async {
@@ -435,9 +448,9 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
                 style: const TextStyle(color: Colors.grey),
               ),
               const SizedBox(height: 16),
-              const ListTile(
+              ListTile(
                 leading: Icon(Symbols.high_quality_rounded),
-                title: Text('Quality'),
+                title: Text(AppLocalizations.of(ctx).t('player.downloadSheet.quality')),
                 subtitle: Text('720p'),
               ),
               FilledButton(
@@ -485,7 +498,13 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
                   onTap: () {
                     Navigator.pop(ctx);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Saved to $name')),
+                      SnackBar(
+                        content: Text(
+                          l
+                              .t('player.snackbar.savedTo')
+                              .replaceAll('%s', name),
+                        ),
+                      ),
                     );
                   },
                 ),
@@ -572,6 +591,7 @@ class _PlayerSurfaceState extends State<_PlayerSurface>
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final isFullscreen = widget.isFullscreen;
     final initialized = widget.initialized;
     final controller = widget.controller;
@@ -736,7 +756,7 @@ class _PlayerSurfaceState extends State<_PlayerSurface>
                         child: Row(
                           children: [
                             IconButton(
-                              tooltip: 'Back',
+                              tooltip: l.t('player.tooltip.back'),
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(
                                 minWidth: 48,
@@ -747,7 +767,7 @@ class _PlayerSurfaceState extends State<_PlayerSurface>
                             ),
                             const Spacer(),
                             IconButton(
-                              tooltip: 'Playback speed / quality',
+                              tooltip: l.t('player.tooltip.playbackSpeedQuality'),
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(
                                 minWidth: 48,
@@ -757,7 +777,7 @@ class _PlayerSurfaceState extends State<_PlayerSurface>
                               icon: const Icon(Symbols.more_vert_rounded, color: Colors.white),
                             ),
                             IconButton(
-                              tooltip: 'Settings',
+                              tooltip: l.t('player.tooltip.settings'),
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(
                                 minWidth: 48,
@@ -775,7 +795,7 @@ class _PlayerSurfaceState extends State<_PlayerSurface>
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           IconButton(
-                            tooltip: 'Rewind 10 seconds',
+                            tooltip: l.t('player.tooltip.rewind10Seconds'),
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(
                               minWidth: 48,
@@ -786,7 +806,7 @@ class _PlayerSurfaceState extends State<_PlayerSurface>
                           ),
                           const SizedBox(width: 10),
                           IconButton(
-                            tooltip: playing ? 'Pause' : 'Play',
+                            tooltip: playing ? l.t('player.tooltip.pause') : l.t('player.tooltip.play'),
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(
                               minWidth: 48,
@@ -802,7 +822,7 @@ class _PlayerSurfaceState extends State<_PlayerSurface>
                           ),
                           const SizedBox(width: 10),
                           IconButton(
-                            tooltip: 'Forward 10 seconds',
+                            tooltip: l.t('player.tooltip.forward10Seconds'),
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(
                               minWidth: 48,
@@ -816,7 +836,7 @@ class _PlayerSurfaceState extends State<_PlayerSurface>
                       const Spacer(),
                       // Bottom progress
                       Padding(
-                        padding: const EdgeInsets.only(left: 12, right: 6, bottom: 6),
+                        padding: const EdgeInsets.only(left: 12, right: 6, bottom: 4),
                         child: Row(
                           children: [
                             Text(
@@ -825,7 +845,7 @@ class _PlayerSurfaceState extends State<_PlayerSurface>
                             ),
                             const Spacer(),
                             IconButton(
-                              tooltip: 'Mini player',
+                              tooltip: l.t('player.tooltip.miniPlayer'),
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(
                                 minWidth: 48,
@@ -835,7 +855,9 @@ class _PlayerSurfaceState extends State<_PlayerSurface>
                               icon: const Icon(Symbols.picture_in_picture_rounded, color: Colors.white),
                             ),
                             IconButton(
-                              tooltip: isFullscreen ? 'Exit fullscreen' : 'Fullscreen',
+                              tooltip: isFullscreen
+                                  ? l.t('player.tooltip.exitFullscreen')
+                                  : l.t('player.tooltip.fullscreen'),
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(
                                 minWidth: 48,
@@ -859,7 +881,7 @@ class _PlayerSurfaceState extends State<_PlayerSurface>
                           await onScrubTo(Duration(milliseconds: targetMs));
                         },
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 2),
                     ],
                   ),
                 ),
@@ -890,6 +912,71 @@ class _MiniPlayerOverlay extends StatefulWidget {
 
 class _MiniPlayerOverlayState extends State<_MiniPlayerOverlay> {
   Offset _offset = const Offset(16, 16);
+  bool _isDragging = false;
+
+  Duration _snapDuration = const Duration(milliseconds: 380);
+
+  Offset _snapToNearestCorner({
+    required Size screenSize,
+    required double miniWidth,
+    required double miniHeight,
+    required Offset current,
+  }) {
+    const edgeInset = 8.0;
+    final minRight = edgeInset;
+    final maxRight = screenSize.width - miniWidth - edgeInset;
+    final minBottom = edgeInset;
+    final maxBottom = screenSize.height - miniHeight - edgeInset;
+
+    final corners = <Offset>[
+      Offset(minRight, minBottom), // bottom-right
+      Offset(maxRight, minBottom), // bottom-left
+      Offset(minRight, maxBottom), // top-right
+      Offset(maxRight, maxBottom), // top-left
+    ];
+
+    double bestDist = double.infinity;
+    Offset best = corners.first;
+    for (final c in corners) {
+      final dx = current.dx - c.dx;
+      final dy = current.dy - c.dy;
+      final dist = dx * dx + dy * dy;
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = c;
+      }
+    }
+    return best;
+  }
+
+  Offset _clampToSide({
+    required Size screenSize,
+    required double miniWidth,
+    required double miniHeight,
+    required Offset candidate,
+  }) {
+    const edgeInset = 8.0;
+    final minRight = edgeInset;
+    final maxRight = screenSize.width - miniWidth - edgeInset;
+    final minBottom = edgeInset;
+    final maxBottom = screenSize.height - miniHeight - edgeInset;
+
+    // Split line: right coordinate vs the center of the screen.
+    final midRight = (minRight + maxRight) / 2;
+    final midBottom = (minBottom + maxBottom) / 2;
+
+    final isRightSide = candidate.dx <= midRight;
+    final isBottomSide = candidate.dy <= midBottom;
+
+    final clampedDx = isRightSide
+        ? candidate.dx.clamp(minRight, midRight)
+        : candidate.dx.clamp(midRight, maxRight);
+    final clampedDy = isBottomSide
+        ? candidate.dy.clamp(minBottom, midBottom)
+        : candidate.dy.clamp(midBottom, maxBottom);
+
+    return Offset(clampedDx, clampedDy);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -900,78 +987,118 @@ class _MiniPlayerOverlayState extends State<_MiniPlayerOverlay> {
     final width = size.width * 0.5;
     final height = width * 9 / 16 + 40;
 
-    return Positioned(
-      right: _offset.dx,
-      bottom: _offset.dy,
-      child: GestureDetector(
-          onPanUpdate: (details) {
-            setState(() {
-              _offset = Offset(
-                (_offset.dx - details.delta.dx)
-                    .clamp(8, size.width - width - 8),
-                (_offset.dy - details.delta.dy)
-                    .clamp(8, size.height - height - 8),
-              );
-            });
-          },
-          onTap: widget.onTap,
-          child: Material(
-          elevation: 8,
-          borderRadius: BorderRadius.circular(12),
-          clipBehavior: Clip.antiAlias,
-          child: SizedBox(
-            width: width,
-            height: height,
-            child: Column(
-              children: [
-                Expanded(
-                  child: Container(
-                    color: Colors.black,
-                    child: initialized && c != null
-                        ? FittedBox(
-                            fit: BoxFit.cover,
-                            child: SizedBox(
-                              width: c.value.size.width,
-                              height: c.value.size.height,
-                              child: VideoPlayer(c),
-                            ),
-                          )
-                        : const Center(
-                            child: CircularProgressIndicator(color: Colors.white),
+    final snap = _snapToNearestCorner(
+      screenSize: size,
+      miniWidth: width,
+      miniHeight: height,
+      current: _offset,
+    );
+
+    final widgetChild = GestureDetector(
+      onPanStart: (_) {
+        setState(() => _isDragging = true);
+      },
+      onPanUpdate: (details) {
+        final candidate = Offset(
+          (_offset.dx - details.delta.dx),
+          (_offset.dy - details.delta.dy),
+        );
+
+        setState(() {
+          _offset = _clampToSide(
+            screenSize: size,
+            miniWidth: width,
+            miniHeight: height,
+            candidate: candidate,
+          );
+        });
+      },
+      onPanEnd: (_) {
+        setState(() {
+          _isDragging = false;
+          // Snap to nearest corner (YouTube-like).
+          _offset = snap;
+        });
+      },
+      onPanCancel: () {
+        setState(() {
+          _isDragging = false;
+          _offset = snap;
+        });
+      },
+      onTap: widget.onTap,
+      child: Material(
+        elevation: 8,
+        borderRadius: BorderRadius.circular(12),
+        clipBehavior: Clip.antiAlias,
+        child: SizedBox(
+          width: width,
+          height: height,
+          child: Column(
+            children: [
+              Expanded(
+                child: Container(
+                  color: Colors.black,
+                  child: initialized && c != null
+                      ? FittedBox(
+                          fit: BoxFit.cover,
+                          child: SizedBox(
+                            width: c.value.size.width,
+                            height: c.value.size.height,
+                            child: VideoPlayer(c),
                           ),
-                  ),
-                ),
-                Container(
-                  color: Colors.black87,
-                  height: 40,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Row(
-                    children: [
-                      const Expanded(
-                        child: Text(
-                          'Mini player',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(color: Colors.white),
+                        )
+                      : const Center(
+                          child: CircularProgressIndicator(color: Colors.white),
                         ),
-                      ),
-                      IconButton(
-                        onPressed: widget.onClose,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: 48,
-                          minHeight: 48,
-                        ),
-                        icon: const Icon(Symbols.close_rounded, color: Colors.white),
-                      ),
-                    ],
-                  ),
                 ),
-              ],
-            ),
+              ),
+              Container(
+                color: Colors.black87,
+                height: 40,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'Mini player',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: widget.onClose,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 48,
+                        minHeight: 48,
+                      ),
+                      icon: const Icon(Symbols.close_rounded, color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
-        ),
+      ),
+    );
+
+    if (_isDragging) {
+      return Positioned(
+        right: _offset.dx,
+        bottom: _offset.dy,
+        child: widgetChild,
+      );
+    }
+
+    return AnimatedPositioned(
+      duration: _snapDuration,
+      curve: Curves.easeOutCubic,
+      right: snap.dx,
+      bottom: snap.dy,
+      child: widgetChild,
     );
   }
 }

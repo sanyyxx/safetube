@@ -285,6 +285,7 @@ class _CommentsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -298,7 +299,7 @@ class _CommentsSection extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              '• 123',
+              l.t('player.comments.dotCount'),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).brightness == Brightness.dark
                         ? Colors.white70
@@ -326,14 +327,16 @@ class _CommentsSection extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'User $i • 2 hours ago',
+                          l
+                              .t('player.comments.userTime')
+                              .replaceAll('%s', i.toString()),
                           style: const TextStyle(
                             fontWeight: FontWeight.w500,
                             fontSize: 12,
                           ),
                         ),
                         const SizedBox(height: 2),
-                        const Text('Great video!'),
+                        Text(l.t('player.comments.greatVideo')),
                         const SizedBox(height: 4),
                         Row(
                           children: const [
@@ -362,6 +365,7 @@ class _RecommendationsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -393,15 +397,17 @@ class _RecommendationsSection extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Recommended video #$i',
+                          l
+                              .t('player.recommendations.recommendedVideo')
+                              .replaceAll('%s', i.toString()),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
                         const SizedBox(height: 2),
-                        const Text(
-                          'Channel name • 123K views • 3 days ago',
-                          style: TextStyle(fontSize: 12, color: Colors.black54),
+                        Text(
+                          l.t('player.recommendations.channelMeta'),
+                          style: const TextStyle(fontSize: 12, color: Colors.black54),
                         ),
                       ],
                     ),

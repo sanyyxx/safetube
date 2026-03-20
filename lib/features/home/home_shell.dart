@@ -197,6 +197,7 @@ class _PublishScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context);
     return SafeArea(
       child: CustomScrollView(
         slivers: [
@@ -204,7 +205,7 @@ class _PublishScreen extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
               child: Text(
-                'Create',
+                l.t('publish.createTitle'),
                 style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -217,24 +218,24 @@ class _PublishScreen extends StatelessWidget {
               delegate: SliverChildListDelegate([
                 _CreateTile(
                   icon: Symbols.upload_file_rounded,
-                  title: 'Upload videos',
-                  subtitle: 'Upload from your device',
+                  title: l.t('publish.uploadVideosTitle'),
+                  subtitle: l.t('publish.uploadVideosSubtitle'),
                   onTap: () {
                     _showUploadOptions(context);
                   },
                 ),
                 _CreateTile(
                   icon: Symbols.live_tv_rounded,
-                  title: 'Go live',
-                  subtitle: 'Stream in real time',
+                  title: l.t('publish.goLiveTitle'),
+                  subtitle: l.t('publish.goLiveSubtitle'),
                   onTap: () {
                     _showGoLiveOptions(context);
                   },
                 ),
                 _CreateTile(
                   icon: Symbols.videocam_rounded,
-                  title: 'Create a Short',
-                  subtitle: 'Create short videos',
+                  title: l.t('publish.createShortTitle'),
+                  subtitle: l.t('publish.createShortSubtitle'),
                   onTap: () {
                     _showShortOptions(context);
                   },
@@ -248,6 +249,7 @@ class _PublishScreen extends StatelessWidget {
   }
 
   void _showUploadOptions(BuildContext context) {
+    final l = AppLocalizations.of(context);
     showModalBottomSheet<void>(
       context: context,
       builder: (ctx) => SafeArea(
@@ -256,21 +258,21 @@ class _PublishScreen extends StatelessWidget {
           children: [
             ListTile(
               leading: const Icon(Symbols.folder_open_rounded),
-              title: const Text('Choose from device'),
+              title: Text(l.t('publish.options.chooseFromDevice')),
               onTap: () {
                 Navigator.pop(ctx);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Choose a video to upload')),
+                  SnackBar(content: Text(l.t('publish.options.chooseVideoToUpload'))),
                 );
               },
             ),
             ListTile(
               leading: const Icon(Symbols.cloud_upload_rounded),
-              title: const Text('Upload from link'),
+              title: Text(l.t('publish.options.uploadFromLink')),
               onTap: () {
                 Navigator.pop(ctx);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Paste video link')),
+                  SnackBar(content: Text(l.t('publish.options.pasteVideoLink'))),
                 );
               },
             ),
@@ -281,6 +283,7 @@ class _PublishScreen extends StatelessWidget {
   }
 
   void _showGoLiveOptions(BuildContext context) {
+    final l = AppLocalizations.of(context);
     showModalBottomSheet<void>(
       context: context,
       builder: (ctx) => SafeArea(
@@ -289,21 +292,21 @@ class _PublishScreen extends StatelessWidget {
           children: [
             ListTile(
               leading: const Icon(Symbols.videocam_rounded),
-              title: const Text('Stream with camera'),
+              title: Text(l.t('publish.options.streamWithCamera')),
               onTap: () {
                 Navigator.pop(ctx);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Starting stream…')),
+                  SnackBar(content: Text(l.t('publish.options.startingStream'))),
                 );
               },
             ),
             ListTile(
               leading: const Icon(Symbols.screen_share_rounded),
-              title: const Text('Stream screen'),
+              title: Text(l.t('publish.options.streamScreen')),
               onTap: () {
                 Navigator.pop(ctx);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Select screen to share')),
+                  SnackBar(content: Text(l.t('publish.options.selectScreenToShare'))),
                 );
               },
             ),
@@ -314,6 +317,7 @@ class _PublishScreen extends StatelessWidget {
   }
 
   void _showShortOptions(BuildContext context) {
+    final l = AppLocalizations.of(context);
     showModalBottomSheet<void>(
       context: context,
       builder: (ctx) => SafeArea(
@@ -322,21 +326,21 @@ class _PublishScreen extends StatelessWidget {
           children: [
             ListTile(
               leading: const Icon(Symbols.videocam_rounded),
-              title: const Text('Record a Short'),
+              title: Text(l.t('publish.options.recordShort')),
               onTap: () {
                 Navigator.pop(ctx);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Opening camera…')),
+                  SnackBar(content: Text(l.t('publish.options.openingCamera'))),
                 );
               },
             ),
             ListTile(
               leading: const Icon(Symbols.photo_library_rounded),
-              title: const Text('Create from photos'),
+              title: Text(l.t('publish.options.createFromPhotos')),
               onTap: () {
                 Navigator.pop(ctx);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Choose photos')),
+                  SnackBar(content: Text(l.t('publish.options.choosePhotos'))),
                 );
               },
             ),
@@ -384,6 +388,7 @@ class _SubscriptionsScreen extends StatelessWidget {
   final Future<void> Function(VideoItem) onOpenVideo;
 
   void _showManageSheet(BuildContext context) {
+    final l = AppLocalizations.of(context);
     showModalBottomSheet<void>(
       context: context,
       builder: (ctx) => SafeArea(
@@ -391,12 +396,12 @@ class _SubscriptionsScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              title: const Text('Manage subscriptions'),
+              title: Text(l.t('subscriptions.manageSubscriptions')),
               leading: const Icon(Symbols.settings_rounded),
               onTap: () => Navigator.pop(ctx),
             ),
             ListTile(
-              title: const Text('Turn on all notifications'),
+              title: Text(l.t('subscriptions.turnOnAllNotifications')),
               leading: const Icon(Symbols.notifications_rounded),
               onTap: () => Navigator.pop(ctx),
             ),
@@ -409,15 +414,41 @@ class _SubscriptionsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context);
     final channels = <_ChannelEntry>[
-      const _ChannelEntry(name: 'Flutter Academy', newCount: 2, latest: 'Getting started with Flutter'),
-      const _ChannelEntry(name: 'DIY & Crafts', newCount: 1, latest: 'Easy craft ideas'),
-      const _ChannelEntry(name: 'Cooking with Kids', newCount: 0, latest: 'Pancakes recipe'),
-      const _ChannelEntry(name: 'Funny Animals', newCount: 3, latest: 'Best of the week'),
-      const _ChannelEntry(name: 'Learning Channel', newCount: 0, latest: 'Math tips'),
+      _ChannelEntry(
+        matchName: 'Flutter Academy',
+        displayName: l.t('subscriptions.channel.flutterAcademy'),
+        newCount: 2,
+        latest: 'Getting started with Flutter',
+      ),
+      _ChannelEntry(
+        matchName: 'DIY & Crafts',
+        displayName: l.t('subscriptions.channel.diyCrafts'),
+        newCount: 1,
+        latest: 'Easy craft ideas',
+      ),
+      _ChannelEntry(
+        matchName: 'Cooking with Kids',
+        displayName: l.t('subscriptions.channel.cookingWithKids'),
+        newCount: 0,
+        latest: 'Pancakes recipe',
+      ),
+      _ChannelEntry(
+        matchName: 'Funny Animals',
+        displayName: l.t('subscriptions.channel.funnyAnimals'),
+        newCount: 3,
+        latest: 'Best of the week',
+      ),
+      _ChannelEntry(
+        matchName: 'Learning Channel',
+        displayName: l.t('subscriptions.channel.learningChannel'),
+        newCount: 0,
+        latest: 'Math tips',
+      ),
     ];
     // Видео от подписанных каналов — для демо берём общую ленту (как на главной)
-    final subscribedChannelNames = channels.map((c) => c.name.toLowerCase()).toSet();
+    final subscribedChannelNames = channels.map((c) => c.matchName.toLowerCase()).toSet();
     final feedVideos = demoFeed.where((v) {
       return subscribedChannelNames.any((name) => v.channelName.toLowerCase().contains(name) || name.contains(v.channelName.toLowerCase()));
     }).toList();
@@ -433,7 +464,7 @@ class _SubscriptionsScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    'Subscriptions',
+                    l.t('subscriptions.title'),
                     style: theme.textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
@@ -441,7 +472,7 @@ class _SubscriptionsScreen extends StatelessWidget {
                 ),
                 TextButton(
                   onPressed: () => _showManageSheet(context),
-                  child: const Text('Manage'),
+                  child: Text(l.t('subscriptions.manage')),
                 ),
               ],
             ),
@@ -451,7 +482,10 @@ class _SubscriptionsScreen extends StatelessWidget {
             height: 112,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              // Не "съедаем" высоту вертикальным padding'ом: иначе при
+              // масштабировании шрифтов/рендере web получается
+              // RenderFlex overflowed by a few pixels.
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
               itemCount: channels.length,
               itemBuilder: (context, index) {
                 final ch = channels[index];
@@ -462,7 +496,7 @@ class _SubscriptionsScreen extends StatelessWidget {
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(
                           builder: (_) => _ChannelFeedScreen(
-                            channelName: ch.name,
+                              channelName: ch.displayName,
                             videos: demoFeed,
                             onOpenVideo: onOpenVideo,
                           ),
@@ -481,7 +515,7 @@ class _SubscriptionsScreen extends StatelessWidget {
                               radius: 32,
                               backgroundColor: theme.colorScheme.surfaceContainerHighest,
                               child: Text(
-                                ch.name.characters.first.toUpperCase(),
+                                ch.displayName.characters.first.toUpperCase(),
                                 style: TextStyle(
                                   color: theme.colorScheme.onSurface,
                                   fontWeight: FontWeight.w600,
@@ -515,7 +549,7 @@ class _SubscriptionsScreen extends StatelessWidget {
                         SizedBox(
                           width: 64,
                           child: Text(
-                            ch.name,
+                            ch.displayName,
                             maxLines: 2,
                             textAlign: TextAlign.center,
                             overflow: TextOverflow.ellipsis,
@@ -535,7 +569,9 @@ class _SubscriptionsScreen extends StatelessWidget {
           // Список видео карточками (как на главной)
           Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.only(bottom: 16),
+              // Avoid double bottom insets (SafeArea + extra padding) that can
+              // cause small RenderFlex overflows on web.
+              padding: EdgeInsets.zero,
               itemCount: videos.length,
               itemBuilder: (context, i) {
                 final item = videos[i];
@@ -557,11 +593,13 @@ class _SubscriptionsScreen extends StatelessWidget {
 
 class _ChannelEntry {
   const _ChannelEntry({
-    required this.name,
+    required this.matchName,
+    required this.displayName,
     required this.newCount,
     required this.latest,
   });
-  final String name;
+  final String matchName;
+  final String displayName;
   final int newCount;
   final String latest;
 }
@@ -579,6 +617,7 @@ class _ChannelFeedScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(channelName),
@@ -641,7 +680,7 @@ class _LibraryScreen extends StatelessWidget {
     const userAvatar = Icon(Symbols.person_rounded, size: 44);
     const userName = 'Sany';
     const userHandle = '@sanyyyvfx';
-    const userExtra = 'Private profile';
+    final userExtra = l.t('you.privateProfileDemo');
 
     return SafeArea(
       child: CustomScrollView(
@@ -688,9 +727,9 @@ class _LibraryScreen extends StatelessWidget {
                     tooltip: l.t('you.editProfile'),
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Edit profile (demo).'),
-                        ),
+                      SnackBar(
+                        content: Text(l.t('you.editProfile')),
+                      ),
                       );
                     },
                     icon: const Icon(Symbols.settings_rounded),
@@ -753,6 +792,7 @@ class _LibrarySectionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -775,7 +815,7 @@ class _LibrarySectionScreen extends StatelessWidget {
                   Icon(icon, size: 64, color: Theme.of(context).colorScheme.outline),
                   const SizedBox(height: 16),
                   Text(
-                    'No videos here yet',
+                    l.t('library.noVideosHereYet'),
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ],
@@ -831,6 +871,77 @@ class _MiniPlayerOverlay extends StatefulWidget {
 
 class _MiniPlayerOverlayState extends State<_MiniPlayerOverlay> {
   Offset _offset = const Offset(16, 16);
+  bool _isDragging = false;
+  final Duration _snapDuration = const Duration(milliseconds: 380);
+
+  Offset _nearestCorner({
+    required Size screenSize,
+    required double miniWidth,
+    required double miniHeight,
+    required Offset currentOffset,
+  }) {
+    const edgeInset = 8.0;
+    final minRight = edgeInset;
+    final maxRight = screenSize.width - miniWidth - edgeInset;
+    final minBottom = edgeInset;
+    final maxBottom = screenSize.height - miniHeight - edgeInset;
+
+    final safeMaxRight = maxRight < minRight ? minRight : maxRight;
+    final safeMaxBottom = maxBottom < minBottom ? minBottom : maxBottom;
+
+    final corners = <Offset>[
+      Offset(minRight, minBottom), // bottom-right
+      Offset(safeMaxRight, minBottom), // bottom-left
+      Offset(minRight, safeMaxBottom), // top-right
+      Offset(safeMaxRight, safeMaxBottom), // top-left
+    ];
+
+    double bestDistSq = double.infinity;
+    Offset best = corners.first;
+    for (final c in corners) {
+      final dx = currentOffset.dx - c.dx;
+      final dy = currentOffset.dy - c.dy;
+      final distSq = dx * dx + dy * dy;
+      if (distSq < bestDistSq) {
+        bestDistSq = distSq;
+        best = c;
+      }
+    }
+    return best;
+  }
+
+  Offset _clampToQuadrant({
+    required Size screenSize,
+    required double miniWidth,
+    required double miniHeight,
+    required Offset candidateOffset,
+  }) {
+    const edgeInset = 8.0;
+    final minRight = edgeInset;
+    final maxRight = screenSize.width - miniWidth - edgeInset;
+    final minBottom = edgeInset;
+    final maxBottom = screenSize.height - miniHeight - edgeInset;
+
+    final safeMaxRight = maxRight < minRight ? minRight : maxRight;
+    final safeMaxBottom = maxBottom < minBottom ? minBottom : maxBottom;
+
+    final midRight = (minRight + safeMaxRight) / 2;
+    final midBottom = (minBottom + safeMaxBottom) / 2;
+
+    // Right side if closer to the right edge (smaller "right" offset).
+    final isRightSide = candidateOffset.dx <= midRight;
+    // Bottom side if closer to the bottom edge (smaller "bottom" offset).
+    final isBottomSide = candidateOffset.dy <= midBottom;
+
+    final clampedDx = isRightSide
+        ? candidateOffset.dx.clamp(minRight, midRight)
+        : candidateOffset.dx.clamp(midRight, safeMaxRight);
+    final clampedDy = isBottomSide
+        ? candidateOffset.dy.clamp(minBottom, midBottom)
+        : candidateOffset.dy.clamp(midBottom, safeMaxBottom);
+
+    return Offset(clampedDx, clampedDy);
+  }
 
   @override
   void initState() {
@@ -886,19 +997,49 @@ class _MiniPlayerOverlayState extends State<_MiniPlayerOverlay> {
         : 0.0;
     final playing = v.isPlaying;
 
-    return Positioned(
+    return AnimatedPositioned(
+      duration: _isDragging ? Duration.zero : _snapDuration,
+      curve: Curves.easeOutCubic,
       right: _offset.dx,
       bottom: _offset.dy,
       child: GestureDetector(
+        onPanStart: (_) {
+          setState(() => _isDragging = true);
+        },
         onPanUpdate: (details) {
+          final candidate = Offset(
+            _offset.dx - details.delta.dx,
+            _offset.dy - details.delta.dy,
+          );
+
           setState(() {
-            _offset = Offset(
-              (_offset.dx - details.delta.dx)
-                  .clamp(8, size.width - width - 8),
-              (_offset.dy - details.delta.dy).clamp(
-                8,
-                size.height - totalHeight - 8,
-              ),
+            _offset = _clampToQuadrant(
+              screenSize: size,
+              miniWidth: width,
+              miniHeight: totalHeight,
+              candidateOffset: candidate,
+            );
+          });
+        },
+        onPanEnd: (_) {
+          setState(() {
+            _isDragging = false;
+            _offset = _nearestCorner(
+              screenSize: size,
+              miniWidth: width,
+              miniHeight: totalHeight,
+              currentOffset: _offset,
+            );
+          });
+        },
+        onPanCancel: () {
+          setState(() {
+            _isDragging = false;
+            _offset = _nearestCorner(
+              screenSize: size,
+              miniWidth: width,
+              miniHeight: totalHeight,
+              currentOffset: _offset,
             );
           });
         },

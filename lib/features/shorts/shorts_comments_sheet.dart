@@ -95,16 +95,21 @@ class _ShortsCommentsContentState extends State<_ShortsCommentsContent> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? _bg : Colors.white;
+    final textPrimary = isDark ? _textPrimary : Colors.black87;
+    final textSecondary = isDark ? _textSecondary : const Color(0xFF666666);
+    final inputBg = isDark ? _inputBg : const Color(0xFFF2F2F2);
 
     return Container(
-      decoration: const BoxDecoration(
-        color: _bg,
+      decoration: BoxDecoration(
+        color: bg,
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       child: Column(
         children: [
-          _buildHandle(),
-          _buildHeader(context, l),
+          _buildHandle(textSecondary),
+          _buildHeader(context, l, textPrimary),
           Expanded(
             child: ListView.builder(
               controller: widget.scrollController,
@@ -113,42 +118,42 @@ class _ShortsCommentsContentState extends State<_ShortsCommentsContent> {
               itemBuilder: (context, i) => _CommentTile(comment: widget.comments[i], l: l),
             ),
           ),
-          _buildInput(context, l),
+          _buildInput(context, l, bg, inputBg, textPrimary, textSecondary),
         ],
       ),
     );
   }
 
-  Widget _buildHandle() {
+  Widget _buildHandle(Color textSecondary) {
     return Padding(
       padding: const EdgeInsets.only(top: 12, bottom: 8),
       child: Container(
         width: 40,
         height: 4,
         decoration: BoxDecoration(
-          color: _textSecondary.withValues(alpha: 0.5),
+          color: textSecondary.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(2),
         ),
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context, AppLocalizations l) {
+  Widget _buildHeader(BuildContext context, AppLocalizations l, Color textPrimary) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
           Text(
             '${l.t('shorts.commentsTitle')} ${widget.commentCount}',
-            style: const TextStyle(
-              color: _textPrimary,
+            style: TextStyle(
+              color: textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.w600,
             ),
           ),
           const Spacer(),
           IconButton(
-            icon: const Icon(Symbols.tune_rounded, color: _textPrimary, size: 22),
+            icon: Icon(Symbols.tune_rounded, color: textPrimary, size: 22),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(l.t('shorts.filterComments'))),
@@ -156,7 +161,7 @@ class _ShortsCommentsContentState extends State<_ShortsCommentsContent> {
             },
           ),
           IconButton(
-            icon: const Icon(Symbols.close_rounded, color: _textPrimary, size: 24),
+            icon: Icon(Symbols.close_rounded, color: textPrimary, size: 24),
             onPressed: widget.onClose,
           ),
         ],
@@ -164,29 +169,36 @@ class _ShortsCommentsContentState extends State<_ShortsCommentsContent> {
     );
   }
 
-  Widget _buildInput(BuildContext context, AppLocalizations l) {
+  Widget _buildInput(
+    BuildContext context,
+    AppLocalizations l,
+    Color bg,
+    Color inputBg,
+    Color textPrimary,
+    Color textSecondary,
+  ) {
     return Container(
       padding: EdgeInsets.fromLTRB(16, 12, 16, 12 + MediaQuery.of(context).padding.bottom),
-      color: _bg,
+      color: bg,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           CircleAvatar(
             radius: 18,
-            backgroundColor: _inputBg,
-            child: const Icon(Symbols.person_rounded, color: _textSecondary, size: 20),
+            backgroundColor: inputBg,
+            child: Icon(Symbols.person_rounded, color: textSecondary, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: TextField(
               controller: _inputController,
               focusNode: _inputFocus,
-              style: const TextStyle(color: _textPrimary, fontSize: 15),
+              style: TextStyle(color: textPrimary, fontSize: 15),
               decoration: InputDecoration(
                 hintText: l.t('shorts.commentPlaceholder'),
-                hintStyle: const TextStyle(color: _textSecondary),
+                hintStyle: TextStyle(color: textSecondary),
                 filled: true,
-                fillColor: _inputBg,
+                fillColor: inputBg,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
                   borderSide: BorderSide.none,
@@ -219,6 +231,11 @@ class _CommentTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textPrimary = isDark ? _textPrimary : Colors.black87;
+    final textSecondary = isDark ? _textSecondary : const Color(0xFF666666);
+    final avatarBg = isDark ? const Color(0xFF2A2A2A) : const Color(0xFFEFEFEF);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: Row(
@@ -226,12 +243,12 @@ class _CommentTile extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 20,
-            backgroundColor: const Color(0xFF2A2A2A),
+            backgroundColor: avatarBg,
             backgroundImage: comment.authorAvatarUrl != null
                 ? NetworkImage(comment.authorAvatarUrl!)
                 : null,
             child: comment.authorAvatarUrl == null
-                ? const Icon(Symbols.person_rounded, color: _textSecondary, size: 22)
+                ? Icon(Symbols.person_rounded, color: textSecondary, size: 22)
                 : null,
           ),
           const SizedBox(width: 12),
@@ -244,12 +261,12 @@ class _CommentTile extends StatelessWidget {
                     padding: const EdgeInsets.only(bottom: 4),
                     child: Row(
                       children: [
-                        const Icon(Symbols.push_pin_rounded, size: 14, color: _textSecondary),
+                        Icon(Symbols.push_pin_rounded, size: 14, color: textSecondary),
                         const SizedBox(width: 4),
                         Text(
                           '${l.t('shorts.pinnedBy')} ${comment.pinnedByHandle}',
-                          style: const TextStyle(
-                            color: _textSecondary,
+                          style: TextStyle(
+                            color: textSecondary,
                             fontSize: 12,
                           ),
                         ),
@@ -260,8 +277,8 @@ class _CommentTile extends StatelessWidget {
                   children: [
                     Text(
                       comment.authorHandle,
-                      style: const TextStyle(
-                        color: _textPrimary,
+                      style: TextStyle(
+                        color: textPrimary,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
@@ -273,11 +290,11 @@ class _CommentTile extends StatelessWidget {
                     const SizedBox(width: 6),
                     Text(
                       comment.timeAgo,
-                      style: const TextStyle(color: _textSecondary, fontSize: 12),
+                      style: TextStyle(color: textSecondary, fontSize: 12),
                     ),
                     const Spacer(),
                     IconButton(
-                      icon: const Icon(Symbols.more_vert_rounded, color: _textSecondary, size: 20),
+                      icon: Icon(Symbols.more_vert_rounded, color: textSecondary, size: 20),
                       onPressed: () {},
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
@@ -287,13 +304,13 @@ class _CommentTile extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   comment.text,
-                  style: const TextStyle(color: _textPrimary, fontSize: 14, height: 1.3),
+                  style: TextStyle(color: textPrimary, fontSize: 14, height: 1.3),
                 ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Symbols.thumb_up_rounded, size: 18, color: _textSecondary),
+                      icon: Icon(Symbols.thumb_up_rounded, size: 18, color: textSecondary),
                       onPressed: () {},
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(minWidth: 32, minHeight: 28),
@@ -301,18 +318,18 @@ class _CommentTile extends StatelessWidget {
                     if (comment.likeCount > 0)
                       Text(
                         _formatCount(comment.likeCount),
-                        style: const TextStyle(color: _textSecondary, fontSize: 12),
+                        style: TextStyle(color: textSecondary, fontSize: 12),
                       ),
                     const SizedBox(width: 8),
                     IconButton(
-                      icon: const Icon(Symbols.thumb_down_rounded, size: 18, color: _textSecondary),
+                      icon: Icon(Symbols.thumb_down_rounded, size: 18, color: textSecondary),
                       onPressed: () {},
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(minWidth: 32, minHeight: 28),
                     ),
                     const SizedBox(width: 8),
                     IconButton(
-                      icon: const Icon(Symbols.reply_rounded, size: 18, color: _textSecondary),
+                      icon: Icon(Symbols.reply_rounded, size: 18, color: textSecondary),
                       onPressed: () {},
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(minWidth: 32, minHeight: 28),
@@ -344,7 +361,10 @@ class _CommentTile extends StatelessWidget {
   }
 
   String _formatCount(int n) {
-    if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)} тыс.';
+    if (n >= 1000) {
+      final v = (n / 1000).toStringAsFixed(1);
+      return l.t('shorts.countThousands').replaceAll('%s', v);
+    }
     return n.toString();
   }
 }
