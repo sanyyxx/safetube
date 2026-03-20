@@ -10,6 +10,8 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import '../../l10n/app_localizations.dart';
 
 import '../../data/video_item.dart';
+import 'widgets/player_metadata_panel.dart';
+import 'widgets/player_progress_bar.dart';
 
 class PlayerScreen extends StatefulWidget {
   const PlayerScreen({
@@ -31,19 +33,25 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
   bool _showControls = true;
   bool _isFullscreen = false;
   bool _isMini = false;
-  bool _liked = false;
-  bool _disliked = false;
-  bool _subscribed = false;
-  int _likesCount = 0;
   String _qualityLabel = 'Auto';
   Timer? _hideTimer;
   Duration _lastPosition = Duration.zero;
+  int _lastProgressUiUpdateMs = 0;
+  bool _keepWakelockOnDispose = false;
+  final ValueNotifier<PlayerActionsState> _actions = ValueNotifier(
+    const PlayerActionsState(
+      liked: false,
+      disliked: false,
+      subscribed: false,
+      likesCount: 0,
+    ),
+  );
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _likesCount = 100 + math.Random().nextInt(900);
+    _actions.value = _actions.value.copyWith(likesCount: 100 + math.Random().nextInt(900));
     widget.controller.addListener(_onTick);
     WakelockPlus.enable();
     _scheduleHide();
@@ -52,8 +60,16 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
   void _onTick() {
     final c = widget.controller;
     final pos = c.value.position;
-    if (pos != _lastPosition && mounted) {
-      _lastPosition = pos;
+    if (pos == _lastPosition) return;
+    _lastPosition = pos;
+
+    // Video progress can update frequently; rebuilding the whole screen for
+    // every tick causes unnecessary work (especially on web).
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    const minUiUpdateIntervalMs = 250; // ~4 FPS UI refresh
+    if (!mounted) return;
+    if (nowMs - _lastProgressUiUpdateMs >= minUiUpdateIntervalMs) {
+      _lastProgressUiUpdateMs = nowMs;
       setState(() {});
     }
   }
@@ -63,7 +79,10 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
     WidgetsBinding.instance.removeObserver(this);
     _hideTimer?.cancel();
     widget.controller.removeListener(_onTick);
-    WakelockPlus.disable();
+    _actions.dispose();
+    if (!_keepWakelockOnDispose) {
+      WakelockPlus.disable();
+    }
     _exitFullscreenIfNeeded();
     super.dispose();
   }
@@ -178,42 +197,50 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
                     onFullscreen: _toggleFullscreen,
                     onSpeedPressed: () => _showSpeedQualitySheet(context),
                     onSettingsPressed: () => _showPlayerSettingsSheet(context),
-                    onMiniToggle: () => widget.onEnterMini(),
+                    onMiniToggle: () {
+                      // Keep the wakelock enabled: mini-player is still playing.
+                      _keepWakelockOnDispose = true;
+                      widget.onEnterMini();
+                    },
                   ),
                 if (!_isFullscreen)
                   Expanded(
-                child: _MetadataPanel(
+                child: PlayerMetadataPanel(
                   video: widget.video,
-                  liked: _liked,
-                  disliked: _disliked,
-                  subscribed: _subscribed,
-                  likesCount: _likesCount,
+                  actions: _actions,
                   qualityLabel: _qualityLabel,
                   onLikeToggle: () {
-                    setState(() {
-                      if (_liked) {
-                        _liked = false;
-                        if (_likesCount > 0) _likesCount -= 1;
-                      } else {
-                        _liked = true;
-                        _likesCount += 1;
-                        if (_disliked) {
-                          _disliked = false;
-                        }
-                      }
-                    });
+                    final a = _actions.value;
+                    if (a.liked) {
+                      _actions.value = a.copyWith(
+                        liked: false,
+                        likesCount: math.max(0, a.likesCount - 1),
+                      );
+                      return;
+                    }
+
+                    _actions.value = a.copyWith(
+                      liked: true,
+                      likesCount: a.likesCount + 1,
+                      disliked: false,
+                    );
                   },
                   onDislikeToggle: () {
-                    setState(() {
-                      _disliked = !_disliked;
-                      if (_disliked && _liked) {
-                        _liked = false;
-                        if (_likesCount > 0) _likesCount -= 1;
-                      }
-                    });
+                    final a = _actions.value;
+                    if (a.disliked) {
+                      _actions.value = a.copyWith(disliked: false);
+                      return;
+                    }
+
+                    _actions.value = a.copyWith(
+                      disliked: true,
+                      liked: a.liked ? false : a.liked,
+                      likesCount: a.liked ? math.max(0, a.likesCount - 1) : a.likesCount,
+                    );
                   },
                   onSubscribeToggle: () {
-                    setState(() => _subscribed = !_subscribed);
+                    final a = _actions.value;
+                    _actions.value = a.copyWith(subscribed: !a.subscribed);
                   },
                   onShare: () => _showShareSheet(context),
                   onDownload: () => _showDownloadSheet(context),
@@ -587,10 +614,14 @@ class _PlayerSurfaceState extends State<_PlayerSurface>
 
     return AspectRatio(
       aspectRatio: 16 / 9,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
+      child: Semantics(
+        button: true,
+        label: 'Toggle player controls',
         onTap: onTap,
-        child: Stack(
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: Stack(
           fit: StackFit.expand,
           children: [
             content,
@@ -706,17 +737,32 @@ class _PlayerSurfaceState extends State<_PlayerSurface>
                           children: [
                             IconButton(
                               tooltip: 'Back',
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(
+                                minWidth: 48,
+                                minHeight: 48,
+                              ),
                               onPressed: onBack,
                               icon: const Icon(Symbols.arrow_back_rounded, color: Colors.white),
                             ),
                             const Spacer(),
                             IconButton(
                               tooltip: 'Playback speed / quality',
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(
+                                minWidth: 48,
+                                minHeight: 48,
+                              ),
                               onPressed: widget.onSpeedPressed,
                               icon: const Icon(Symbols.more_vert_rounded, color: Colors.white),
                             ),
                             IconButton(
                               tooltip: 'Settings',
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(
+                                minWidth: 48,
+                                minHeight: 48,
+                              ),
                               onPressed: widget.onSettingsPressed,
                               icon: const Icon(Symbols.settings_rounded, color: Colors.white),
                             ),
@@ -730,12 +776,22 @@ class _PlayerSurfaceState extends State<_PlayerSurface>
                         children: [
                           IconButton(
                             tooltip: 'Rewind 10 seconds',
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(
+                              minWidth: 48,
+                              minHeight: 48,
+                            ),
                             onPressed: () => onSeekRelative(const Duration(seconds: -10)),
                             icon: const Icon(Symbols.replay_10_rounded, color: Colors.white, size: 34),
                           ),
                           const SizedBox(width: 10),
                           IconButton(
                             tooltip: playing ? 'Pause' : 'Play',
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(
+                              minWidth: 48,
+                              minHeight: 48,
+                            ),
                             onPressed: onPlayPause,
                             icon: Icon(
                               playing ? Symbols.pause_circle_rounded : Symbols.play_circle_rounded,
@@ -747,6 +803,11 @@ class _PlayerSurfaceState extends State<_PlayerSurface>
                           const SizedBox(width: 10),
                           IconButton(
                             tooltip: 'Forward 10 seconds',
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(
+                              minWidth: 48,
+                              minHeight: 48,
+                            ),
                             onPressed: () => onSeekRelative(const Duration(seconds: 10)),
                             icon: const Icon(Symbols.forward_10_rounded, color: Colors.white, size: 34),
                           ),
@@ -765,11 +826,21 @@ class _PlayerSurfaceState extends State<_PlayerSurface>
                             const Spacer(),
                             IconButton(
                               tooltip: 'Mini player',
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(
+                                minWidth: 48,
+                                minHeight: 48,
+                              ),
                               onPressed: widget.onMiniToggle,
                               icon: const Icon(Symbols.picture_in_picture_rounded, color: Colors.white),
                             ),
                             IconButton(
                               tooltip: isFullscreen ? 'Exit fullscreen' : 'Fullscreen',
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(
+                                minWidth: 48,
+                                minHeight: 48,
+                              ),
                               onPressed: onFullscreen,
                               icon: Icon(
                                 isFullscreen ? Symbols.fullscreen_exit_rounded : Symbols.fullscreen_rounded,
@@ -779,7 +850,7 @@ class _PlayerSurfaceState extends State<_PlayerSurface>
                           ],
                         ),
                       ),
-                      _ProgressBar(
+                      PlayerProgressBar(
                         value: progress,
                         bufferedValue: bufferProgress,
                         onChange: (v) async {
@@ -795,6 +866,7 @@ class _PlayerSurfaceState extends State<_PlayerSurface>
               ),
             ),
           ],
+        ),
         ),
       ),
     );
@@ -832,16 +904,18 @@ class _MiniPlayerOverlayState extends State<_MiniPlayerOverlay> {
       right: _offset.dx,
       bottom: _offset.dy,
       child: GestureDetector(
-        onPanUpdate: (details) {
-          setState(() {
-            _offset = Offset(
-              (_offset.dx - details.delta.dx).clamp(8, size.width - width - 8),
-              (_offset.dy - details.delta.dy).clamp(8, size.height - height - 8),
-            );
-          });
-        },
-        onTap: widget.onTap,
-        child: Material(
+          onPanUpdate: (details) {
+            setState(() {
+              _offset = Offset(
+                (_offset.dx - details.delta.dx)
+                    .clamp(8, size.width - width - 8),
+                (_offset.dy - details.delta.dy)
+                    .clamp(8, size.height - height - 8),
+              );
+            });
+          },
+          onTap: widget.onTap,
+          child: Material(
           elevation: 8,
           borderRadius: BorderRadius.circular(12),
           clipBehavior: Clip.antiAlias,
@@ -883,6 +957,11 @@ class _MiniPlayerOverlayState extends State<_MiniPlayerOverlay> {
                       ),
                       IconButton(
                         onPressed: widget.onClose,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 48,
+                          minHeight: 48,
+                        ),
                         icon: const Icon(Symbols.close_rounded, color: Colors.white),
                       ),
                     ],
@@ -892,7 +971,7 @@ class _MiniPlayerOverlayState extends State<_MiniPlayerOverlay> {
             ),
           ),
         ),
-      ),
+        ),
     );
   }
 }

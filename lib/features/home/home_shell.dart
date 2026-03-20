@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:video_player/video_player.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../data/video_item.dart';
 import '../../data/short_item.dart';
@@ -62,6 +63,15 @@ class _HomeShellState extends State<HomeShell> {
         ),
       ),
     );
+
+    // If we closed the player without switching to mini-mode, clean up the
+    // controller so we don't keep wake locks/resources around.
+    if (!mounted) return;
+    if (!_miniActive) {
+      _playerController?.dispose();
+      _playerController = null;
+      _activeItem = null;
+    }
   }
 
   void _openSettings() {
@@ -80,6 +90,7 @@ class _HomeShellState extends State<HomeShell> {
   @override
   void dispose() {
     _playerController?.dispose();
+    WakelockPlus.disable();
     super.dispose();
   }
 
@@ -124,12 +135,22 @@ class _HomeShellState extends State<HomeShell> {
                     ),
                   ),
                 );
+
+                // Same cleanup rule as in _openVideo: if user exited the player
+                // without going back to mini-mode, fully release controller.
+                if (!mounted) return;
+                if (!_miniActive) {
+                  _playerController?.dispose();
+                  _playerController = null;
+                  _activeItem = null;
+                }
               },
               onClose: () {
                 _miniActive = false;
                 _playerController?.dispose();
                 _playerController = null;
                 _activeItem = null;
+                WakelockPlus.disable();
                 setState(() {});
               },
             ),

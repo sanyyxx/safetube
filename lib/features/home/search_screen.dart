@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../data/video_store.dart';
@@ -211,12 +212,17 @@ class _SearchScreenState extends State<SearchScreen> {
                     const SizedBox(width: 12),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(4),
-                      child: Image.network(
-                        entry.thumbnailUrl!,
+                      child: CachedNetworkImage(
+                        imageUrl: entry.thumbnailUrl!,
                         width: 48,
                         height: 36,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const SizedBox(
+                        placeholder: (_, __) => const SizedBox(
+                          width: 48,
+                          height: 36,
+                          child: ColoredBox(color: _fieldBg),
+                        ),
+                        errorWidget: (_, __, ___) => const SizedBox(
                           width: 48,
                           height: 36,
                           child: ColoredBox(color: _fieldBg),
@@ -232,7 +238,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     ),
                     onPressed: () {
                       _controller.text = entry.query;
-                      setState(() {});
+                      _submitQuery(entry.query);
                     },
                   ),
                 ],

@@ -130,8 +130,8 @@ class VideoListItem extends StatelessWidget {
                       tooltip: 'More actions',
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(
-                        minWidth: 40,
-                        minHeight: 40,
+                        minWidth: 48,
+                        minHeight: 48,
                       ),
                       onPressed: () {
                         showModalBottomSheet<void>(

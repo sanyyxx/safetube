@@ -255,12 +255,19 @@ class _ShortsScreenState extends State<ShortsScreen> {
           final likesCount = _likesCounts[index];
           final commentCount = _commentCounts[index];
 
-          return GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: _togglePlayPause,
-            onDoubleTap: () => widget.onOpenShort(s),
-            child: Stack(
-              children: [
+          return Semantics(
+            container: true,
+            button: true,
+            label: isCurrent ? (_isPlaying ? 'Pause short' : 'Play short') : 'Short',
+            onTap: () {
+              _togglePlayPause();
+            },
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _togglePlayPause,
+              onDoubleTap: () => widget.onOpenShort(s),
+              child: Stack(
+                children: [
                 Center(
                   child: AspectRatio(
                     aspectRatio: 9 / 16,
@@ -394,6 +401,7 @@ class _ShortsScreenState extends State<ShortsScreen> {
                   ),
                 ),
               ],
+              ),
             ),
           );
         },
