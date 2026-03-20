@@ -10,6 +10,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import '../../l10n/app_localizations.dart';
 
 import '../../data/video_item.dart';
+import 'widgets/ambient_background.dart';
 import 'widgets/player_metadata_panel.dart';
 import 'widgets/player_progress_bar.dart';
 
@@ -559,6 +560,8 @@ class _PlayerSurface extends StatefulWidget {
 
 class _PlayerSurfaceState extends State<_PlayerSurface>
     with SingleTickerProviderStateMixin {
+  final GlobalKey _videoRepaintBoundaryKey = GlobalKey();
+
   bool _showLeftHint = false;
   bool _showRightHint = false;
   Timer? _leftTimer;
@@ -619,11 +622,17 @@ class _PlayerSurfaceState extends State<_PlayerSurface>
         : bufferedEnd.inMilliseconds / duration.inMilliseconds;
 
     Widget content = Container(color: Colors.black);
+    final bool ambientEnabled = initialized && c != null;
+    final double videoAspect =
+        (c?.value.aspectRatio == 0 || c == null) ? 16 / 9 : c!.value.aspectRatio;
     if (initialized && c != null) {
       content = Center(
-        child: AspectRatio(
-          aspectRatio: c.value.aspectRatio == 0 ? 16 / 9 : c.value.aspectRatio,
-          child: VideoPlayer(c),
+        child: RepaintBoundary(
+          key: _videoRepaintBoundaryKey,
+          child: AspectRatio(
+            aspectRatio: videoAspect,
+            child: VideoPlayer(c),
+          ),
         ),
       );
     } else {
@@ -645,6 +654,11 @@ class _PlayerSurfaceState extends State<_PlayerSurface>
           fit: StackFit.expand,
           children: [
             content,
+              AmbientBackground(
+                enabled: ambientEnabled,
+                videoAspectRatio: videoAspect,
+                videoRepaintBoundaryKey: _videoRepaintBoundaryKey,
+              ),
             // Double-tap seek zones (YouTube-like)
             Row(
               children: [
