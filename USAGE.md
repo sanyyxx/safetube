@@ -45,7 +45,7 @@ puro flutter run -d <device_id>
 ## 2. Что уже работает «из коробки»
 
 - Splash, Home, Shorts, Publish, Subscriptions, Library — все экраны открываются.
-- Поиск и фильтры на главной (по локальному списку).
+- Поиск и фильтры на главной (по ленте с API).
 - Просмотр видео в плеере (пауза, перемотка, полноэкран, мини-плеер).
 - Шортсы: вертикальная лента, свайп, автопроигрывание, пауза по тапу.
 - Настройки темы (Light / System / Dark) в профиле.
@@ -57,7 +57,7 @@ puro flutter run -d <device_id>
 
 | Задача | Сейчас | Что нужно |
 |--------|--------|-----------|
-| **Контент (видео и шортсы)** | Один демо-ролик + 2 шортса с одного URL | Подключить свой источник: API (YouTube Data API v3, свой бэкенд) или загрузка списка из админки/файла. Обновить `video_store.dart` и `short_store.dart` (или заменить на запросы к API). |
+| **Контент (видео и шортсы)** | `GET .../videos` — `lib/data/video_repository.dart` | `GET .../shorts` — `lib/data/short_repository.dart`, см. `docs/API_SHORTS.md`. |
 | **Cast (трансляция на ТВ)** | SnackBar «не настроено» | Интеграция с Chromecast SDK (например `flutter_cast`) или аналог. |
 | **Уведомления** | Заглушка | Push-уведомления (Firebase Cloud Messaging и т.п.) или свой сервер. |
 | **Реальные подписки** | Демо-список каналов | Хранить подписки пользователя (локально или в аккаунте на бэкенде) и подтягивать ленту по ним. |
@@ -71,8 +71,8 @@ puro flutter run -d <device_id>
 
 ## 4. Минимум для «использования под свои видео»
 
-1. **Свой список видео**  
-   Заменить/дополнить `demoFeed` в `lib/data/video_store.dart` и при необходимости `demoShorts` в `lib/data/short_store.dart` на свои URL (прямые ссылки на `.mp4` или HLS/DASH), заголовки и превью.
+1. **Список видео с админки**  
+   Бэкенд: `GET /api/v1/videos` и `GET /api/v1/shorts` (базовый URL в `lib/core/api_config.dart`). Документация: `docs/API_VIDEOS.md`, `docs/API_SHORTS.md`.
 
 2. **Сборка и запуск**  
    Выполнять шаги из раздела 1 (build web + `python -m http.server 8080` или `puro flutter run -d chrome`).

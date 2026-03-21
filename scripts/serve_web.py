@@ -7,6 +7,7 @@
 """
 import argparse
 import os
+import shutil
 import subprocess
 import sys
 import threading
@@ -26,13 +27,30 @@ def project_root():
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
+def flutter_command_prefix():
+    """Путь к Flutter: `flutter` в PATH или `puro flutter` (Windows)."""
+    if shutil.which("flutter"):
+        return ["flutter"]
+    puro = shutil.which("puro")
+    if puro:
+        return [puro, "flutter"]
+    return ["flutter"]
+
+
 def run_build(root: str) -> bool:
     """Запускает flutter build web. Возвращает True при успехе."""
-    print("[build] Запуск flutter build web ...")
+    # --no-web-resources-cdn: CanvasKit идёт из build/web/canvaskit (без gstatic).
+    # Иначе при блокировке CDN / офлайне часто «вечный» белый экран.
+    cmd = flutter_command_prefix() + [
+        "build",
+        "web",
+        "--no-web-resources-cdn",
+    ]
+    print("[build] Запуск: %s" % " ".join(cmd))
     r = subprocess.run(
-        ["flutter", "build", "web"],
+        cmd,
         cwd=root,
-        shell=(os.name == "nt"),
+        shell=False,
     )
     if r.returncode == 0:
         print("[build] Готово. Обнови вкладку в браузере.")

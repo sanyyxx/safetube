@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
-import '../../data/video_store.dart';
 import '../../data/video_item.dart';
+import '../../data/video_repository.dart';
 import '../../l10n/app_localizations.dart';
 import 'widgets/video_list_item.dart';
 
@@ -55,6 +55,9 @@ class _SearchScreenState extends State<SearchScreen> {
     super.initState();
     _controller = TextEditingController(text: widget.initialQuery);
     _focusNode = FocusNode();
+    VideoRepository.instance.loadFeed().then((_) {
+      if (mounted) setState(() {});
+    });
     if (widget.initialQuery.isNotEmpty) {
       _runSearch(widget.initialQuery);
     }
@@ -67,7 +70,7 @@ class _SearchScreenState extends State<SearchScreen> {
     super.dispose();
   }
 
-  void _runSearch(String q) {
+  Future<void> _runSearch(String q) async {
     final qLower = q.trim().toLowerCase();
     if (qLower.isEmpty) {
       setState(() {
@@ -76,7 +79,11 @@ class _SearchScreenState extends State<SearchScreen> {
       });
       return;
     }
-    final list = demoFeed.where((v) {
+    try {
+      await VideoRepository.instance.loadFeed();
+    } catch (_) {}
+    if (!mounted) return;
+    final list = VideoRepository.instance.cachedFeed.where((v) {
       return v.title.toLowerCase().contains(qLower) ||
           v.channelName.toLowerCase().contains(qLower);
     }).toList();

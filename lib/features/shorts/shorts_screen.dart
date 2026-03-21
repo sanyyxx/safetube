@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -7,17 +8,17 @@ import 'package:video_player/video_player.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../data/short_item.dart';
+import '../../data/short_repository.dart';
 import 'shorts_comments_sheet.dart';
 
 class ShortsScreen extends StatefulWidget {
   const ShortsScreen({
     super.key,
-    required this.shorts,
-    required this.onOpenShort,
+    required this.isActive,
   });
 
-  final List<ShortItem> shorts;
-  final Future<void> Function(ShortItem) onOpenShort;
+  /// Вкладка Shorts выбрана в [IndexedStack]. Иначе не грузим видео (иначе звук на фоне).
+  final bool isActive;
 
   @override
   State<ShortsScreen> createState() => _ShortsScreenState();
@@ -25,59 +26,203 @@ class ShortsScreen extends StatefulWidget {
 
 class _ShortsScreenState extends State<ShortsScreen> {
   late final PageController _pageController;
-  late final List<ShortItem> _items;
+  List<ShortItem> _items = [];
   VideoPlayerController? _videoController;
+  VideoPlayerController? _preloadController;
+  int _preloadedIndex = -1;
   int _currentIndex = 0;
   bool _isPlaying = false;
 
-  late final List<int> _likesCounts;
-  late final List<int> _commentCounts;
-  late final List<bool> _likedStates;
-  late final List<bool> _dislikedStates;
-  late final List<bool> _subscribedStates;
+  bool _loading = true;
+  String? _error;
+
+  List<int> _likesCounts = [];
+  List<int> _commentCounts = [];
+  List<bool> _likedStates = [];
+  List<bool> _dislikedStates = [];
+  List<bool> _subscribedStates = [];
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
-    // Перемешиваем шортсы, чтобы порядок был “рандомным”.
-    _items = List<ShortItem>.from(widget.shorts)..shuffle(math.Random());
+    _loadShorts();
+  }
 
-    _likesCounts =
-        List<int>.generate(_items.length, (i) => _parseCompactLikes(_items[i].likesText));
+  Future<void> _loadShorts({bool force = false}) async {
+    setState(() {
+      _loading = true;
+      if (force) _error = null;
+    });
+    try {
+      await ShortRepository.instance.loadShorts(force: force);
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = null;
+        _items = List<ShortItem>.from(ShortRepository.instance.cachedShorts);
+        _rebuildSideState();
+      });
+      _currentIndex = 0;
+      if (_items.isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted || _items.isEmpty) return;
+          if (_pageController.hasClients) {
+            _pageController.jumpToPage(0);
+          }
+          if (widget.isActive) {
+            _loadVideoForIndex(0);
+          }
+        });
+      } else {
+        _videoController?.dispose();
+        _videoController = null;
+        if (mounted) setState(() => _isPlaying = false);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = ShortRepository.instance.lastError ?? e.toString();
+      });
+      if (_items.isEmpty) {
+        _videoController?.dispose();
+        _videoController = null;
+        if (mounted) setState(() => _isPlaying = false);
+      }
+    }
+  }
+
+  void _rebuildSideState() {
+    _likesCounts = List<int>.generate(
+      _items.length,
+      (i) => _parseCompactLikes(_items[i].likesText),
+    );
     _commentCounts = List<int>.generate(_items.length, (i) => 120 + i * 7);
     _likedStates = List<bool>.filled(_items.length, false);
     _dislikedStates = List<bool>.filled(_items.length, false);
     _subscribedStates = List<bool>.filled(_items.length, false);
-
-    _loadVideoForIndex(_currentIndex);
   }
+
+  @override
+  void didUpdateWidget(ShortsScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!oldWidget.isActive && widget.isActive) {
+      if (_items.isNotEmpty) {
+        _loadVideoForIndex(_currentIndex.clamp(0, _items.length - 1));
+      }
+    }
+    if (oldWidget.isActive && !widget.isActive) {
+      _videoController?.pause();
+      _videoController?.dispose();
+      _videoController = null;
+      if (mounted) {
+        setState(() => _isPlaying = false);
+      }
+    }
+  }
+
+  // OPT7: preload BOTH next and previous
+  VideoPlayerController? _preloadPrevController;
+  int _preloadedPrevIndex = -1;
 
   @override
   void dispose() {
     _pageController.dispose();
     _videoController?.dispose();
+    _preloadController?.dispose();
+    _preloadPrevController?.dispose();
     super.dispose();
   }
 
   Future<void> _loadVideoForIndex(int index) async {
+    if (!widget.isActive) return;
+    final safeIndex = index.clamp(0, _items.length - 1);
+
+    VideoPlayerController controller;
+
+    // Use preloaded controller if it matches
+    if (_preloadedIndex == safeIndex && _preloadController != null) {
+      _videoController?.dispose();
+      controller = _preloadController!;
+      _videoController = controller;
+      _preloadController = null;
+      _preloadedIndex = -1;
+    } else if (_preloadedPrevIndex == safeIndex && _preloadPrevController != null) {
+      // OPT7: swap in the prev-preloaded controller
+      _videoController?.dispose();
+      controller = _preloadPrevController!;
+      _videoController = controller;
+      _preloadPrevController = null;
+      _preloadedPrevIndex = -1;
+    } else {
+      _videoController?.dispose();
+      _preloadController?.dispose();
+      _preloadPrevController?.dispose();
+      _preloadController = null;
+      _preloadPrevController = null;
+      _preloadedIndex = -1;
+      _preloadedPrevIndex = -1;
+
+      final item = _items[safeIndex];
+      controller = VideoPlayerController.networkUrl(Uri.parse(item.playbackUrl));
+      _videoController = controller;
+      if (mounted) setState(() => _isPlaying = false);
+
+      await controller.initialize();
+      if (!mounted || !widget.isActive || _videoController != controller) {
+        controller.dispose();
+        return;
+      }
+    }
+
+    await controller.setLooping(true);
+    await controller.play();
+    if (!mounted) return;
+    setState(() => _isPlaying = true);
+
+    // OPT7: preload both next and previous
+    unawaited(_preloadForIndex(safeIndex + 1));
+    unawaited(_preloadPrevForIndex(safeIndex - 1));
+  }
+
+  Future<void> _preloadForIndex(int index) async {
     if (index < 0 || index >= _items.length) return;
+    if (_preloadedIndex == index) return;
 
-    _videoController?.dispose();
+    _preloadController?.dispose();
+    _preloadController = null;
+    _preloadedIndex = index;
+
     final item = _items[index];
-
-    final controller =
-        VideoPlayerController.networkUrl(Uri.parse(item.playbackUrl));
-    _videoController = controller;
-    setState(() {
-      _isPlaying = false;
-    });
+    final controller = VideoPlayerController.networkUrl(Uri.parse(item.playbackUrl));
+    _preloadController = controller;
 
     await controller.initialize();
-    await controller.play();
-    setState(() {
-      _isPlaying = true;
-    });
+    if (!mounted || _preloadController != controller) {
+      controller.dispose();
+      return;
+    }
+  }
+
+  // OPT7: preload previous video
+  Future<void> _preloadPrevForIndex(int index) async {
+    if (index < 0 || index >= _items.length) return;
+    if (_preloadedPrevIndex == index) return;
+
+    _preloadPrevController?.dispose();
+    _preloadPrevController = null;
+    _preloadedPrevIndex = index;
+
+    final item = _items[index];
+    final controller = VideoPlayerController.networkUrl(Uri.parse(item.playbackUrl));
+    _preloadPrevController = controller;
+
+    await controller.initialize();
+    if (!mounted || _preloadPrevController != controller) {
+      controller.dispose();
+      return;
+    }
   }
 
   Future<void> _togglePlayPause() async {
@@ -239,15 +384,115 @@ class _ShortsScreenState extends State<ShortsScreen> {
     final l = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? Colors.black : Colors.white;
+    final topPad = MediaQuery.paddingOf(context).top;
+
+    if (_loading && _items.isEmpty && _error == null) {
+      return Scaffold(
+        backgroundColor: bg,
+        body: SafeArea(
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(height: 16),
+                Text(
+                  l.t('shorts.feed.loading'),
+                  style: TextStyle(
+                    color: isDark ? Colors.white70 : Colors.black54,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (_error != null && _items.isEmpty) {
+      return Scaffold(
+        backgroundColor: bg,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    l.t('shorts.feed.loadError'),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  if (_error!.trim().isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      _error!,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                  const SizedBox(height: 20),
+                  FilledButton.icon(
+                    onPressed: () => _loadShorts(force: true),
+                    icon: const Icon(Symbols.refresh_rounded),
+                    label: Text(l.t('home.feed.retry')),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (_items.isEmpty) {
+      return Scaffold(
+        backgroundColor: bg,
+        body: Stack(
+          children: [
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text(
+                  l.t('shorts.feed.empty'),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: isDark ? Colors.white70 : Colors.black54,
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: topPad + 4,
+              right: 8,
+              child: IconButton(
+                tooltip: l.t('home.feed.refreshFeed'),
+                onPressed: () => _loadShorts(force: true),
+                icon: Icon(
+                  Symbols.refresh_rounded,
+                  color: isDark ? Colors.white70 : Colors.black54,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: bg,
-      body: PageView.builder(
+      body: Stack(
+        children: [
+          PageView.builder(
         controller: _pageController,
         scrollDirection: Axis.vertical,
         itemCount: _items.length,
         onPageChanged: (index) {
           _currentIndex = index;
-          _loadVideoForIndex(index);
+          if (widget.isActive) {
+            _loadVideoForIndex(index);
+          }
         },
         itemBuilder: (context, index) {
           final s = _items[index];
@@ -268,13 +513,10 @@ class _ShortsScreenState extends State<ShortsScreen> {
                     ? l.t('shorts.semantics.pauseShort')
                     : l.t('shorts.semantics.playShort'))
                 : l.t('shorts.semantics.short'),
-            onTap: () {
-              _togglePlayPause();
-            },
+            onTap: _togglePlayPause,
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: _togglePlayPause,
-              onDoubleTap: () => widget.onOpenShort(s),
               child: Stack(
                 children: [
                 Center(
@@ -289,16 +531,46 @@ class _ShortsScreenState extends State<ShortsScreen> {
                               child: VideoPlayer(controller),
                             ),
                           )
-                        : CachedNetworkImage(
-                            imageUrl: s.thumbnailUrl,
-                            fit: BoxFit.cover,
-                            placeholder: (_, __) => const ColoredBox(
-                              color: Color(0xFFEEEEEE),
-                            ),
-                            errorWidget: (_, __, ___) => const ColoredBox(
-                              color: Color(0xFFEEEEEE),
-                            ),
-                          ),
+                        : s.thumbnailUrl.trim().isNotEmpty
+                            ? CachedNetworkImage(
+                                imageUrl: s.thumbnailUrl,
+                                fit: BoxFit.cover,
+                                placeholder: (_, __) => const ColoredBox(
+                                  color: Color(0xFFEEEEEE),
+                                ),
+                                errorWidget: (_, __, ___) => const ColoredBox(
+                                  color: Color(0xFFEEEEEE),
+                                ),
+                              )
+                            : const ColoredBox(color: Color(0xFF222222)),
+                  ),
+                ),
+                // GUI2: top gradient so header area is always readable
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment(0, -0.4),
+                          colors: [Color(0xAA000000), Color(0x00000000)],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                // GUI2: bottom gradient behind text/buttons
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment(0, 0.1),
+                          colors: [Color(0xCC000000), Color(0x00000000)],
+                        ),
+                      ),
+                    ),
                   ),
                 ),
                 // Иконка play/пауза по центру
@@ -313,6 +585,27 @@ class _ShortsScreenState extends State<ShortsScreen> {
                         color: Colors.white70,
                         size: 72,
                       ),
+                    ),
+                  ),
+                // GUI1: progress bar at very bottom using AnimatedBuilder
+                if (isCurrent && controller != null)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: AnimatedBuilder(
+                      animation: controller,
+                      builder: (_, __) {
+                        final dur = controller.value.duration.inMilliseconds;
+                        final pos = controller.value.position.inMilliseconds;
+                        final progress = dur > 0 ? (pos / dur).clamp(0.0, 1.0) : 0.0;
+                        return LinearProgressIndicator(
+                          value: progress,
+                          minHeight: 3,
+                          backgroundColor: Colors.white24,
+                          valueColor: const AlwaysStoppedAnimation<Color>(Colors.red),
+                        );
+                      },
                     ),
                   ),
                 Positioned(
@@ -420,6 +713,20 @@ class _ShortsScreenState extends State<ShortsScreen> {
             ),
           );
         },
+      ),
+          Positioned(
+            top: topPad + 4,
+            right: 8,
+            child: IconButton(
+              tooltip: l.t('home.feed.refreshFeed'),
+              onPressed: () => _loadShorts(force: true),
+              icon: const Icon(
+                Symbols.refresh_rounded,
+                color: Colors.white70,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

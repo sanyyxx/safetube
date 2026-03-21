@@ -39,3 +39,15 @@ flutter create .
 
    Опции: `--port 9000` (другой порт), `--no-watch` (только сервер, без слежения за файлами), `--no-build` (не собирать при старте, если `build/web` уже есть).
 
+#### Белый экран в браузере
+
+1. **Не открывай `index.html` двойным щелчком** — нужен HTTP-сервер (`python scripts/serve_web.py` или `python -m http.server` из папки `build/web`).
+2. По умолчанию Flutter тянет **CanvasKit с CDN** (`gstatic.com`). Если сеть/фаервол блокирует CDN — приложение не стартует (белый экран). Скрипт `serve_web.py` собирает с **`--no-web-resources-cdn`** (CanvasKit лежит в `build/web/canvaskit/`). Вручную: `flutter build web --no-web-resources-cdn`.
+3. Сделай **жёсткое обновление** страницы (Ctrl+F5) или очисти данные сайта — старый **service worker** мог закэшировать сломанную сборку.
+
+### API и продакшен (`/app/` на сервере)
+
+- Базовый URL API задаётся в **`lib/core/api_config.dart`** (по умолчанию `https://youtube.esl.kz/api/v1`), при сборке можно переопределить: `--dart-define=API_BASE_URL=...`
+- Полная инструкция: **[docs/DEPLOY_HOSTING.md](docs/DEPLOY_HOSTING.md)** (сборка с `--base-href /app/`, заливка в `public/app/`, CORS для Laravel, nginx).
+- **Пошагово «куда что и как»:** **[docs/STEP_BY_STEP.md](docs/STEP_BY_STEP.md)**
+

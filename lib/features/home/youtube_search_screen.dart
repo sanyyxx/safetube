@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../data/video_item.dart';
-import '../../data/video_store.dart';
+import '../../data/video_repository.dart';
 import '../../l10n/app_localizations.dart';
 import 'widgets/video_list_item.dart';
 
@@ -51,6 +51,10 @@ class _YouTubeSearchScreenState extends State<YouTubeSearchScreen> {
     super.initState();
     _controller = TextEditingController(text: widget.initialQuery);
     _focusNode = FocusNode();
+
+    VideoRepository.instance.loadFeed().then((_) {
+      if (mounted) setState(() {});
+    });
 
     if (widget.initialQuery.trim().isNotEmpty) {
       _scheduleSuggestions(widget.initialQuery);
@@ -116,8 +120,8 @@ class _YouTubeSearchScreenState extends State<YouTubeSearchScreen> {
       if (out.length >= 6) return out;
     }
 
-    // 2) Suggestions from demo content (prefix match on title/channel).
-    for (final v in demoFeed) {
+    // 2) Suggestions from loaded feed (prefix match on title/channel).
+    for (final v in VideoRepository.instance.cachedFeed) {
       final candidates = <String>[v.title, v.channelName];
       for (final candidate in candidates) {
         final c = candidate.trim();
@@ -186,8 +190,8 @@ class _YouTubeSearchScreenState extends State<YouTubeSearchScreen> {
           IconButton(
             icon: Icon(Symbols.chevron_left_rounded, color: textColor, size: 28),
             onPressed: () {
-              widget.onApplyQuery(_controller.text.trim());
-              Navigator.of(context).pop(_controller.text.trim());
+              // Не передаём текст поля на главную — иначе она ошибочно фильтрует ленту.
+              Navigator.of(context).pop<void>();
             },
           ),
           Expanded(
@@ -382,10 +386,13 @@ class _SearchResultsScreen extends StatefulWidget {
 
 class _SearchResultsScreenState extends State<_SearchResultsScreen> {
   Future<List<VideoItem>> _loadResults() async {
-    // Fake a tiny network delay so skeleton is visible.
+    // Tiny delay so skeleton is visible.
     await Future<void>.delayed(const Duration(milliseconds: 260));
+    try {
+      await VideoRepository.instance.loadFeed();
+    } catch (_) {}
     final qLower = widget.query.toLowerCase();
-    return demoFeed.where((v) {
+    return VideoRepository.instance.cachedFeed.where((v) {
       return v.title.toLowerCase().contains(qLower) ||
           v.channelName.toLowerCase().contains(qLower);
     }).toList();

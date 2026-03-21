@@ -17,7 +17,7 @@ dependencies:
   wakelock_plus: ^1.2.10
   material_symbols_icons: ^4.2906.0
   shared_preferences: ^2.2.2
-  palette_generator: ^0.3.3+7
+  http: ^1.2.2
 
 dev_dependencies:
   flutter_test:

@@ -4,9 +4,8 @@ import 'package:video_player/video_player.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../data/video_item.dart';
-import '../../data/short_item.dart';
-import '../../data/short_store.dart';
-import '../../data/video_store.dart';
+import '../../data/short_repository.dart';
+import '../../data/video_repository.dart';
 import '../player/player_screen.dart';
 import '../shorts/shorts_screen.dart';
 import 'home_screen.dart';
@@ -34,10 +33,27 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   int _index = 0;
+  // OPT3: track which tabs have been built (lazy tab creation)
+  final Set<int> _visitedTabs = {0};
 
   VideoItem? _activeItem;
   VideoPlayerController? _playerController;
   bool _miniActive = false;
+
+  // GUI8: compute prev/next from the feed
+  VideoItem? _prevVideo(VideoItem current) {
+    final feed = VideoRepository.instance.cachedFeed;
+    final idx = feed.indexWhere((v) => v.id == current.id || v.playbackUrl == current.playbackUrl);
+    if (idx <= 0) return null;
+    return feed[idx - 1];
+  }
+
+  VideoItem? _nextVideo(VideoItem current) {
+    final feed = VideoRepository.instance.cachedFeed;
+    final idx = feed.indexWhere((v) => v.id == current.id || v.playbackUrl == current.playbackUrl);
+    if (idx < 0 || idx >= feed.length - 1) return null;
+    return feed[idx + 1];
+  }
 
   Future<void> _openVideo(VideoItem item) async {
     _activeItem = item;
@@ -46,8 +62,10 @@ class _HomeShellState extends State<HomeShell> {
     _playerController?.dispose();
     _playerController =
         VideoPlayerController.networkUrl(Uri.parse(item.playbackUrl));
+
+    // Initialize but do NOT play yet — PlayerScreen will call play()
+    // after it is rendered so the screen is visible before audio starts.
     await _playerController!.initialize();
-    await _playerController!.play();
 
     if (!mounted) return;
     await Navigator.of(context).push(
@@ -60,6 +78,14 @@ class _HomeShellState extends State<HomeShell> {
             Navigator.of(context).pop();
             setState(() {});
           },
+          onPrevious: _prevVideo(item) != null ? () {
+            Navigator.of(context).pop();
+            _openVideo(_prevVideo(item)!);
+          } : null,
+          onNext: _nextVideo(item) != null ? () {
+            Navigator.of(context).pop();
+            _openVideo(_nextVideo(item)!);
+          } : null,
         ),
       ),
     );
@@ -88,6 +114,17 @@ class _HomeShellState extends State<HomeShell> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    VideoRepository.instance.loadFeed().then((_) {
+      if (mounted) setState(() {});
+    });
+    ShortRepository.instance.loadShorts().then((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
   void dispose() {
     _playerController?.dispose();
     WakelockPlus.disable();
@@ -100,20 +137,30 @@ class _HomeShellState extends State<HomeShell> {
     return Scaffold(
       body: Stack(
         children: [
+          // OPT3: lazy tab construction — only build a tab on first visit
           IndexedStack(
             index: _index,
             children: [
-              HomeScreen(
-                onOpenVideo: _openVideo,
-                onProfile: _openSettings,
-              ),
-              ShortsScreen(
-                shorts: demoShorts,
-                onOpenShort: (ShortItem s) => _openVideo(s.toVideoItem()),
-              ),
-              const _PublishScreen(),
-              _SubscriptionsScreen(onOpenVideo: _openVideo),
-              _LibraryScreen(onOpenVideo: _openVideo),
+              if (_visitedTabs.contains(0))
+                HomeScreen(onOpenVideo: _openVideo, onProfile: _openSettings)
+              else
+                const SizedBox.shrink(),
+              if (_visitedTabs.contains(1))
+                ShortsScreen(isActive: _index == 1)
+              else
+                const SizedBox.shrink(),
+              if (_visitedTabs.contains(2))
+                const _PublishScreen()
+              else
+                const SizedBox.shrink(),
+              if (_visitedTabs.contains(3))
+                _SubscriptionsScreen(onOpenVideo: _openVideo)
+              else
+                const SizedBox.shrink(),
+              if (_visitedTabs.contains(4))
+                _LibraryScreen(onOpenVideo: _openVideo)
+              else
+                const SizedBox.shrink(),
             ],
           ),
           if (_miniActive && _playerController != null && _activeItem != null)
@@ -158,7 +205,10 @@ class _HomeShellState extends State<HomeShell> {
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
+        onDestinationSelected: (i) => setState(() {
+          _index = i;
+          _visitedTabs.add(i); // OPT3: mark tab as visited so it gets built
+        }),
         destinations: [
           NavigationDestination(
             icon: Icon(Symbols.home_rounded),
@@ -449,10 +499,11 @@ class _SubscriptionsScreen extends StatelessWidget {
     ];
     // Видео от подписанных каналов — для демо берём общую ленту (как на главной)
     final subscribedChannelNames = channels.map((c) => c.matchName.toLowerCase()).toSet();
-    final feedVideos = demoFeed.where((v) {
+    final apiFeed = VideoRepository.instance.cachedFeed;
+    final feedVideos = apiFeed.where((v) {
       return subscribedChannelNames.any((name) => v.channelName.toLowerCase().contains(name) || name.contains(v.channelName.toLowerCase()));
     }).toList();
-    final videos = feedVideos.isEmpty ? demoFeed : feedVideos;
+    final videos = feedVideos.isEmpty ? apiFeed : feedVideos;
 
     return SafeArea(
       child: Column(
@@ -497,7 +548,7 @@ class _SubscriptionsScreen extends StatelessWidget {
                         MaterialPageRoute<void>(
                           builder: (_) => _ChannelFeedScreen(
                               channelName: ch.displayName,
-                            videos: demoFeed,
+                            videos: VideoRepository.instance.cachedFeed,
                             onOpenVideo: onOpenVideo,
                           ),
                         ),
@@ -617,7 +668,6 @@ class _ChannelFeedScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(channelName),
@@ -758,7 +808,7 @@ class _LibraryScreen extends StatelessWidget {
                             builder: (_) => _LibrarySectionScreen(
                               title: item.label,
                               icon: item.icon,
-                              videos: demoFeed,
+                              videos: VideoRepository.instance.cachedFeed,
                               onOpenVideo: onOpenVideo,
                             ),
                           ),
@@ -943,21 +993,25 @@ class _MiniPlayerOverlayState extends State<_MiniPlayerOverlay> {
     return Offset(clampedDx, clampedDy);
   }
 
+  // GUI6: track vertical swipe velocity for dismiss gesture
+  double _swipeVelocity = 0;
+
   @override
   void initState() {
     super.initState();
-    widget.controller.addListener(_onVideoTick);
+    // Resume playback if it was interrupted during the screen transition.
+    final c = widget.controller;
+    if (c.value.isInitialized && !c.value.isPlaying) {
+      c.play();
+    }
   }
 
   @override
   void dispose() {
-    widget.controller.removeListener(_onVideoTick);
     super.dispose();
   }
 
-  void _onVideoTick() {
-    if (mounted) setState(() {});
-  }
+  // OPT2: removed _onVideoTick setState — replaced with AnimatedBuilder in build()
 
   void _togglePlayPause() {
     final c = widget.controller;
@@ -967,7 +1021,7 @@ class _MiniPlayerOverlayState extends State<_MiniPlayerOverlay> {
     } else {
       c.play();
     }
-    setState(() {});
+    // No setState needed — AnimatedBuilder handles play/pause icon update
   }
 
   void _seekFromLocalX(double localX, double barWidth) {
@@ -989,13 +1043,6 @@ class _MiniPlayerOverlayState extends State<_MiniPlayerOverlay> {
     final videoH = width * 9 / 16;
     final totalHeight = videoH + progressH + titleBarH;
     final initialized = widget.controller.value.isInitialized;
-    final v = widget.controller.value;
-    final duration = v.duration;
-    final position = v.position;
-    final progress = duration.inMilliseconds > 0
-        ? (position.inMilliseconds / duration.inMilliseconds).clamp(0.0, 1.0)
-        : 0.0;
-    final playing = v.isPlaying;
 
     return AnimatedPositioned(
       duration: _isDragging ? Duration.zero : _snapDuration,
@@ -1007,11 +1054,12 @@ class _MiniPlayerOverlayState extends State<_MiniPlayerOverlay> {
           setState(() => _isDragging = true);
         },
         onPanUpdate: (details) {
+          // GUI6: track vertical velocity for swipe-down dismiss
+          _swipeVelocity = details.delta.dy;
           final candidate = Offset(
             _offset.dx - details.delta.dx,
             _offset.dy - details.delta.dy,
           );
-
           setState(() {
             _offset = _clampToQuadrant(
               screenSize: size,
@@ -1022,6 +1070,11 @@ class _MiniPlayerOverlayState extends State<_MiniPlayerOverlay> {
           });
         },
         onPanEnd: (_) {
+          // GUI6: swipe down fast → dismiss mini-player
+          if (_swipeVelocity > 12) {
+            widget.onClose();
+            return;
+          }
           setState(() {
             _isDragging = false;
             _offset = _nearestCorner(
@@ -1054,104 +1107,97 @@ class _MiniPlayerOverlayState extends State<_MiniPlayerOverlay> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                SizedBox(
-                  height: videoH,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      ColoredBox(
-                        color: Colors.black,
-                        child: initialized
-                            ? FittedBox(
-                                fit: BoxFit.cover,
+                // OPT2: AnimatedBuilder scopes all reactive parts to one subtree.
+                AnimatedBuilder(
+                  animation: widget.controller,
+                  builder: (_, __) {
+                    final v = widget.controller.value;
+                    final playing = v.isPlaying;
+                    final dur = v.duration;
+                    final pos = v.position;
+                    final progress = dur.inMilliseconds > 0
+                        ? (pos.inMilliseconds / dur.inMilliseconds).clamp(0.0, 1.0)
+                        : 0.0;
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          height: videoH,
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              ColoredBox(
+                                color: Colors.black,
+                                child: initialized
+                                    ? FittedBox(
+                                        fit: BoxFit.cover,
+                                        child: SizedBox(
+                                          width: v.size.width,
+                                          height: v.size.height,
+                                          child: VideoPlayer(widget.controller),
+                                        ),
+                                      )
+                                    : const Center(child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)),
+                              ),
+                              Material(
+                                color: Colors.transparent,
+                                child: InkWell(onTap: widget.onTap, child: const SizedBox.expand()),
+                              ),
+                              if (initialized && !playing)
+                                Center(
+                                  child: Material(
+                                    color: Colors.black45,
+                                    shape: const CircleBorder(),
+                                    child: IconButton(
+                                      onPressed: _togglePlayPause,
+                                      icon: const Icon(Symbols.play_arrow_rounded, color: Colors.white, size: 36, fill: 1),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        LayoutBuilder(
+                          builder: (_, constraints) {
+                            final barW = constraints.maxWidth;
+                            return GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTapDown: (d) => _seekFromLocalX(d.localPosition.dx, barW),
+                              onHorizontalDragUpdate: (d) => _seekFromLocalX(d.localPosition.dx, barW),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(1),
                                 child: SizedBox(
-                                  width: v.size.width,
-                                  height: v.size.height,
-                                  child: VideoPlayer(widget.controller),
+                                  height: progressH,
+                                  width: barW,
+                                  child: LinearProgressIndicator(
+                                    value: progress,
+                                    minHeight: progressH,
+                                    backgroundColor: Colors.white24,
+                                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFF0000)),
+                                  ),
                                 ),
-                              )
-                            : const Center(
-                                child: CircularProgressIndicator(
+                              ),
+                            );
+                          },
+                        ),
+                        Container(
+                          height: titleBarH,
+                          color: const Color(0xFF1A1A1A),
+                          padding: const EdgeInsets.only(left: 8, right: 4),
+                          child: Row(
+                            children: [
+                              IconButton(
+                                visualDensity: VisualDensity.compact,
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                                onPressed: _togglePlayPause,
+                                icon: Icon(
+                                  playing ? Symbols.pause_rounded : Symbols.play_arrow_rounded,
                                   color: Colors.white,
-                                  strokeWidth: 2,
+                                  size: 22,
+                                  fill: 1,
                                 ),
                               ),
-                      ),
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: widget.onTap,
-                          child: const SizedBox.expand(),
-                        ),
-                      ),
-                      if (initialized && !playing)
-                        Center(
-                          child: Material(
-                            color: Colors.black45,
-                            shape: const CircleBorder(),
-                            child: IconButton(
-                              onPressed: _togglePlayPause,
-                              icon: const Icon(
-                                Symbols.play_arrow_rounded,
-                                color: Colors.white,
-                                size: 36,
-                                fill: 1,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                // Шкала прогресса (тап / перетаскивание для перемотки)
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final barW = constraints.maxWidth;
-                    return GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTapDown: (d) =>
-                          _seekFromLocalX(d.localPosition.dx, barW),
-                      onHorizontalDragUpdate: (d) =>
-                          _seekFromLocalX(d.localPosition.dx, barW),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(1),
-                        child: SizedBox(
-                          height: progressH,
-                          width: barW,
-                          child: LinearProgressIndicator(
-                            value: progress,
-                            minHeight: progressH,
-                            backgroundColor: Colors.white24,
-                            valueColor: const AlwaysStoppedAnimation<Color>(
-                              Color(0xFFFF0000),
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                Container(
-                  height: titleBarH,
-                  color: const Color(0xFF1A1A1A),
-                  padding: const EdgeInsets.only(left: 8, right: 4),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        visualDensity: VisualDensity.compact,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: 36,
-                          minHeight: 36,
-                        ),
-                        onPressed: _togglePlayPause,
-                        icon: Icon(
-                          playing ? Symbols.pause_rounded : Symbols.play_arrow_rounded,
-                          color: Colors.white,
-                          size: 22,
-                          fill: 1,
-                        ),
-                      ),
                       Expanded(
                         child: GestureDetector(
                           onTap: widget.onTap,
@@ -1169,20 +1215,17 @@ class _MiniPlayerOverlayState extends State<_MiniPlayerOverlay> {
                       IconButton(
                         visualDensity: VisualDensity.compact,
                         padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: 36,
-                          minHeight: 36,
-                        ),
+                        constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                         onPressed: widget.onClose,
-                        icon: const Icon(
-                          Symbols.close_rounded,
-                          color: Colors.white,
-                          size: 22,
-                        ),
+                        icon: const Icon(Symbols.close_rounded, color: Colors.white, size: 22),
                       ),
                     ],
                   ),
                 ),
+              ],
+            );
+          },
+        ), // end AnimatedBuilder
               ],
             ),
           ),
