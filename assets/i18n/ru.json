@@ -6,12 +6,12 @@
   "theme.light": "Светлая",
   "theme.system": "Системная",
   "theme.dark": "Тёмная",
-
   "home.cast": "Каст",
   "home.notifications": "Уведомления",
   "home.search": "Поиск",
   "home.explore": "Изучать",
   "home.sendFeedback": "ОТПРАВИТЬ ОТЗЫВ",
+  "home.channels.section": "Каналы",
   "home.filter.all": "Все",
   "home.filter.newToYou": "Новое для вас",
   "home.filter.programming": "Компьютерное программирование",
@@ -26,18 +26,15 @@
   "home.feed.retry": "Повторить",
   "home.feed.empty": "Пока нет видео. Добавьте их в админке.",
   "home.feed.refreshFeed": "Обновить ленту",
-
   "dialog.search.title": "Поиск",
   "dialog.search.hint": "Ищите по названию или каналу",
   "dialog.search.cancel": "ОТМЕНА",
   "dialog.search.apply": "ПРИМЕНИТЬ",
-
   "search.hintYouTube": "Поиск на YouTube",
   "search.voiceUnavailable": "Голосовой поиск недоступен",
   "search.noResults": "Ничего не найдено",
   "search.back": "Назад",
   "search.noSuggestions": "Нет подсказок",
-
   "you.title": "You",
   "you.history": "История",
   "you.yourVideos": "Ваши видео",
@@ -48,7 +45,6 @@
   "you.downloadsDesc": "Оффлайн видео",
   "you.playlistsDesc": "Сохраненные плейлисты",
   "you.editProfile": "Редактировать профиль (демо)",
-
   "player.comments": "Комментарии",
   "player.comments.dotCount": "• 123",
   "player.comments.userTime": "Пользователь %s • 2 часа назад",
@@ -73,16 +69,13 @@
   "player.descriptionExpand": "Ещё",
   "player.descriptionCollapse": "Свернуть",
   "player.noRecommendations": "Рекомендаций пока нет.",
-
   "player.action.dislike": "Не нравится",
   "player.action.share": "Поделиться",
   "player.action.download": "Скачать",
   "player.action.save": "Сохранить",
-
   "player.sheet.playbackSpeed": "Скорость воспроизведения",
   "player.sheet.quality": "Качество (HLS/DASH)",
   "player.sheet.qualityAuto": "Рекомендуемое",
-
   "player.settings.title": "Настройки",
   "player.settings.playback": "Воспроизведение",
   "player.settings.playbackSubtitle": "Скорость и качество",
@@ -90,28 +83,23 @@
   "player.settings.captionsSubtitle": "Выкл",
   "player.settings.autoplay": "Автовоспроизведение",
   "player.settings.autoplaySubtitle": "Вкл",
-
   "player.sheet.share": "Поделиться",
   "player.sheet.copyLink": "Скопировать ссылку",
   "player.sheet.linkCopied": "Ссылка скопирована",
   "player.sheet.shareToMessages": "Поделиться сообщением",
   "player.sheet.shareToEmail": "Поделиться по email",
-
   "player.sheet.download": "Скачать",
   "player.sheet.downloadDescription": "Сохраните видео, чтобы смотреть офлайн.",
   "player.sheet.downloading": "Загрузка…",
   "player.sheet.downloadButton": "Скачать",
-
   "player.sheet.savePlaylist": "Сохранить в плейлист",
   "player.sheet.createNewPlaylist": "Создать новый плейлист",
   "player.playlists.watchLater": "Смотреть позже",
   "player.playlists.favorites": "Избранное",
   "player.playlists.music": "Музыка",
-
   "shorts.feed.loading": "Загрузка шортсов…",
   "shorts.feed.loadError": "Не удалось загрузить шортсы.",
   "shorts.feed.empty": "Пока нет шортсов. Добавьте их в админке (API GET …/shorts).",
-
   "shorts.like": "Лайк",
   "shorts.comment": "Комментарий",
   "shorts.share": "Поделиться",
@@ -139,7 +127,6 @@
   "shorts.demo.comment2.timeAgo": "2 мес. назад",
   "shorts.demo.comment3.text": "Как называется эта композиция?",
   "shorts.demo.comment3.timeAgo": "1 нед. назад",
-
   "publish.createTitle": "Создать",
   "publish.uploadVideosTitle": "Загрузить видео",
   "publish.uploadVideosSubtitle": "Загрузить с устройства",
@@ -159,7 +146,6 @@
   "publish.options.openingCamera": "Открываем камеру…",
   "publish.options.createFromPhotos": "Создать из фото",
   "publish.options.choosePhotos": "Выберите фото",
-
   "subscriptions.title": "Подписки",
   "subscriptions.manage": "Управлять",
   "subscriptions.manageSubscriptions": "Управление подписками",
@@ -169,20 +155,16 @@
   "subscriptions.channel.cookingWithKids": "Кулинария с детьми",
   "subscriptions.channel.funnyAnimals": "Забавные животные",
   "subscriptions.channel.learningChannel": "Обучающий канал",
-
   "you.privateProfileDemo": "Приватный профиль",
   "library.noVideosHereYet": "Пока нет видео",
-
   "home.cast.connectToTv": "Подключитесь к телевизору или другому устройству, чтобы смотреть видео на большом экране.",
   "home.cast.chromecast": "Chromecast",
   "home.cast.notConnected": "Не подключено",
   "home.cast.searchingDevices": "Поиск устройств…",
   "home.cast.help": "Помощь",
-
   "home.notifications.markAllAsRead": "Отметить всё как прочитанное",
   "home.notifications.caughtUpTitle": "Вы всё просмотрели",
   "home.notifications.noNewNotifications": "Нет новых уведомлений",
-
   "home.topic.music": "Музыка",
   "home.topic.gaming": "Игры",
   "home.topic.sports": "Спорт",
@@ -191,13 +173,11 @@
   "home.topic.fashion": "Мода",
   "home.topic.science": "Наука",
   "home.topic.cooking": "Кулинария",
-
   "home.feedback.title": "Отправить отзыв",
   "home.feedback.hint": "Расскажите, что вы думаете",
   "home.feedback.cancel": "Отмена",
   "home.feedback.send": "Отправить",
   "home.feedback.thanks": "Спасибо за ваш отзыв!",
-
   "videoList.moreActions": "Ещё действия",
   "videoList.playNow": "Смотреть сейчас",
   "videoList.watchLater": "Смотреть позже",
@@ -206,7 +186,7 @@
   "videoList.savedToPlaylist": "Сохранено в плейлист",
   "videoList.semantics.video": "Видео: %title. %meta",
   "videoList.semantics.channelAvatar": "Аватар канала",
-
+  "video.channel": "Канал",
   "player.downloadSheet.quality": "Качество",
   "player.snackbar.savedTo": "Сохранено в %s",
   "player.tooltip.back": "Назад",
@@ -221,9 +201,11 @@
   "player.tooltip.fullscreen": "Полноэкранный режим",
   "player.tooltip.previousVideo": "Предыдущее видео",
   "player.tooltip.nextVideo": "Следующее видео",
-
   "nav.home": "Главная",
   "nav.shorts": "Shorts",
   "nav.subscriptions": "Подписки",
-  "nav.you": "Вы"
+  "nav.you": "Вы",
+  "channel.unavailable": "Канал для этого видео недоступен",
+  "channel.videoCount": "%s видео",
+  "channel.empty": "В этом канале пока нет видео"
 }

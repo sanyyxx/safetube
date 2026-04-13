@@ -6,6 +6,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import '../../data/video_item.dart';
 import '../../data/short_repository.dart';
 import '../../data/video_repository.dart';
+import '../channel/channel_screen.dart';
 import '../player/player_screen.dart';
 import '../shorts/shorts_screen.dart';
 import 'home_screen.dart';
@@ -73,6 +74,11 @@ class _HomeShellState extends State<HomeShell> {
         builder: (_) => PlayerScreen(
           video: item,
           controller: _playerController!,
+          onOpenVideo: (v) {
+            Navigator.of(context).pop();
+            _openVideo(v);
+          },
+          onOpenChannel: _openChannelFromVideo,
           onEnterMini: () {
             _miniActive = true;
             Navigator.of(context).pop();
@@ -113,6 +119,26 @@ class _HomeShellState extends State<HomeShell> {
     );
   }
 
+  Future<void> _openChannelFromVideo(VideoItem item) async {
+    final slug = item.channelSlug?.trim();
+    if (slug == null || slug.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).t('channel.unavailable'))),
+      );
+      return;
+    }
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ChannelScreen(
+          channelSlug: slug,
+          channelName: item.channelName,
+          onOpenVideo: _openVideo,
+        ),
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -142,7 +168,11 @@ class _HomeShellState extends State<HomeShell> {
             index: _index,
             children: [
               if (_visitedTabs.contains(0))
-                HomeScreen(onOpenVideo: _openVideo, onProfile: _openSettings)
+                HomeScreen(
+                  onOpenVideo: _openVideo,
+                  onOpenChannel: _openChannelFromVideo,
+                  onProfile: _openSettings,
+                )
               else
                 const SizedBox.shrink(),
               if (_visitedTabs.contains(1))
@@ -174,6 +204,11 @@ class _HomeShellState extends State<HomeShell> {
                     builder: (_) => PlayerScreen(
                       video: _activeItem!,
                       controller: _playerController!,
+                      onOpenVideo: (v) {
+                        Navigator.of(context).pop();
+                        _openVideo(v);
+                      },
+                      onOpenChannel: _openChannelFromVideo,
                       onEnterMini: () {
                         _miniActive = true;
                         Navigator.of(context).pop();

@@ -19,6 +19,8 @@ class PlayerScreen extends StatefulWidget {
     required this.video,
     required this.controller,
     required this.onEnterMini,
+    required this.onOpenVideo,
+    required this.onOpenChannel,
     this.onPrevious,
     this.onNext,
   });
@@ -26,6 +28,8 @@ class PlayerScreen extends StatefulWidget {
   final VideoItem video;
   final VideoPlayerController controller;
   final VoidCallback onEnterMini;
+  final void Function(VideoItem) onOpenVideo;
+  final void Function(VideoItem) onOpenChannel;
   final VoidCallback? onPrevious;
   final VoidCallback? onNext;
 
@@ -228,6 +232,8 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
                     video: widget.video,
                     actions: _actions,
                     qualityLabel: _qualityLabel,
+                    onOpenVideo: widget.onOpenVideo,
+                    onOpenChannel: widget.onOpenChannel,
                     onLikeToggle: () {
                       final a = _actions.value;
                       if (a.liked) {

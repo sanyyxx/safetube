@@ -25,10 +25,12 @@ class VideoListItem extends StatefulWidget {
     super.key,
     required this.video,
     required this.onTap,
+    this.onChannelTap,
   });
 
   final VideoItem video;
   final VoidCallback onTap;
+  final ValueChanged<VideoItem>? onChannelTap;
 
   @override
   State<VideoListItem> createState() => _VideoListItemState();
@@ -115,18 +117,23 @@ class _VideoListItemState extends State<VideoListItem> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // GUI9: deterministic color per channel name
-                  Semantics(
-                    label: l.t('videoList.semantics.channelAvatar'),
-                    image: true,
-                    child: CircleAvatar(
-                      radius: 20,
-                      backgroundColor: avatarColor,
-                      child: Text(
-                        channel.isNotEmpty ? channel.characters.first.toUpperCase() : '?',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 18,
+                  GestureDetector(
+                    onTap: widget.onChannelTap == null
+                        ? null
+                        : () => widget.onChannelTap!(video),
+                    child: Semantics(
+                      label: l.t('videoList.semantics.channelAvatar'),
+                      image: true,
+                      child: CircleAvatar(
+                        radius: 20,
+                        backgroundColor: avatarColor,
+                        child: Text(
+                          channel.isNotEmpty ? channel.characters.first.toUpperCase() : '?',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 18,
+                          ),
                         ),
                       ),
                     ),
@@ -146,13 +153,18 @@ class _VideoListItemState extends State<VideoListItem> {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          meta,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: metaColor,
-                            fontSize: 13,
+                        GestureDetector(
+                          onTap: widget.onChannelTap == null
+                              ? null
+                              : () => widget.onChannelTap!(video),
+                          child: Text(
+                            meta,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: metaColor,
+                              fontSize: 13,
+                            ),
                           ),
                         ),
                       ],

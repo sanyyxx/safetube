@@ -54,6 +54,7 @@ class ShortItem {
       thumbnailUrl: thumbnailUrl,
       title: title,
       channelName: channelName,
+      channelSlug: null,
       viewsText: '$likesText likes',
       publishedText: 'Shorts',
     );

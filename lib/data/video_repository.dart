@@ -17,6 +17,11 @@ class VideoRepository {
   String? _lastError;
   Future<List<VideoItem>>? _inFlight;
 
+  /// Текущий фильтр ленты по slug канала (`?channel=`), `null` — все видео.
+  String? _activeChannelSlug;
+
+  int _loadGeneration = 0;
+
   // OPT10: notifier fires when the feed is updated so widgets can react
   // without going through a full HomeShell rebuild.
   final ValueNotifier<List<VideoItem>> feedNotifier = ValueNotifier([]);
@@ -25,20 +30,36 @@ class VideoRepository {
 
   String? get lastError => _lastError;
 
+  String? get activeChannelSlug => _activeChannelSlug;
+
   /// Загрузить ленту. Повторный вызов без [force] вернёт кэш без запроса.
-  Future<List<VideoItem>> loadFeed({bool force = false}) async {
-    if (_feed.isNotEmpty && !force) return _feed;
-    if (_inFlight != null && !force) return _inFlight!;
+  ///
+  /// [channelSlug] — фильтр API по slug канала (как `GET .../videos?channel=slug`).
+  Future<List<VideoItem>> loadFeed({
+    bool force = false,
+    String? channelSlug,
+  }) async {
+    final slug = channelSlug?.trim();
+    final normalized = (slug == null || slug.isEmpty) ? null : slug;
+    final sameFilter = _activeChannelSlug == normalized;
+    if (_feed.isNotEmpty && !force && sameFilter) return _feed;
+    if (_inFlight != null && !force && sameFilter) return _inFlight!;
 
     _lastError = null;
     Future<List<VideoItem>> run() async {
+      final gen = ++_loadGeneration;
       final res = await ApiService.instance.get(
         'videos',
         headers: {'Accept': 'application/json'},
         queryParameters: {
           'per_page': '100',
+          if (normalized != null) 'channel': normalized,
         },
       );
+
+      if (gen != _loadGeneration) {
+        return _feed;
+      }
 
       // OPT8: 304 Not Modified — cache is still valid
       if (res.statusCode == 304) return _feed;
@@ -69,6 +90,11 @@ class VideoRepository {
         );
       }
 
+      if (gen != _loadGeneration) {
+        return _feed;
+      }
+
+      _activeChannelSlug = normalized;
       _feed = items;
       feedNotifier.value = List.unmodifiable(_feed); // OPT10: notify listeners
       return _feed;
@@ -85,5 +111,6 @@ class VideoRepository {
   void clearCache() {
     _feed = [];
     _lastError = null;
+    _activeChannelSlug = null;
   }
 }

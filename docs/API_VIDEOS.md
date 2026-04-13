@@ -3,6 +3,13 @@
 Запрос: **`GET {API_BASE_URL}/videos`**  
 Пример: `https://youtube.esl.kz/api/v1/videos`
 
+### Query-параметры (опционально)
+
+| Параметр | Описание |
+|----------|----------|
+| `per_page` | Размер страницы (клиент обычно передаёт `100`). |
+| `channel` | Фильтр по **slug** канала (логическая группировка на бэкенде, не YouTube API). Пример: `GET .../videos?channel=news`. Поведение аналогично фильтру по категории `category`. |
+
 Заголовок: `Accept: application/json`
 
 ## Форматы ответа (поддерживаются оба)
@@ -18,6 +25,12 @@
       "playback_url": "https://example.com/video.mp4",
       "thumbnail_url": "https://example.com/thumb.jpg",
       "channel_name": "Канал",
+      "channel": {
+        "name": "Название канала",
+        "slug": "news",
+        "description": "Описание",
+        "is_active": true
+      },
       "views_text": "1.2K views",
       "published_text": "2 days ago",
       "duration_text": "6:03"
@@ -48,11 +61,23 @@
 | `playback_url` | да* | Прямая ссылка на mp4 / HLS (или `playbackUrl`, `video_url`) |
 | `thumbnail_url` | желательно | Превью |
 | `title` | да | |
-| `channel_name` | да | |
+| `channel_name` | да* | Строка для UI, если нет вложенного `channel` |
+| `channel` | нет | Объект канала (как `category`): имя, `slug` и т.д. У старых видео может быть **`null`**. Клиент берёт название из `channel.name`, фильтр в API — по **`channel.slug`**. |
 | `views_text` | да | Любая строка для UI |
 | `published_text` | да | Текст или дата строкой |
 | `duration_text` | нет | Например `6:03` |
 | `id` | нет | Для будущего |
+
+\* Если в ответе есть объект `channel` с полем `name`, клиент использует его; иначе — `channel_name` / устаревшие поля.
+
+### Объект `channel` (если не `null`)
+
+| Поле | Примечание |
+|------|------------|
+| `name` | Отображаемое имя канала |
+| `slug` | Уникальный slug; используется в `GET .../videos?channel={slug}` |
+| `description` | Опционально |
+| `is_active` | Опционально |
 
 \* Записи без валидного `http(s)` URL воспроизведения **отфильтровываются**.
 

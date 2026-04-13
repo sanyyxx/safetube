@@ -6,12 +6,12 @@
   "theme.light": "Light",
   "theme.system": "System",
   "theme.dark": "Dark",
-
   "home.cast": "Cast",
   "home.notifications": "Notifications",
   "home.search": "Search",
   "home.explore": "Explore",
   "home.sendFeedback": "SEND FEEDBACK",
+  "home.channels.section": "Channels",
   "home.filter.all": "All",
   "home.filter.newToYou": "New to you",
   "home.filter.programming": "Computer Programming",
@@ -26,18 +26,15 @@
   "home.feed.retry": "Retry",
   "home.feed.empty": "No videos yet. Add them in the admin panel.",
   "home.feed.refreshFeed": "Refresh feed",
-
   "dialog.search.title": "Search",
   "dialog.search.hint": "Search by title or channel",
   "dialog.search.cancel": "CANCEL",
   "dialog.search.apply": "APPLY",
-
   "search.hintYouTube": "Search on YouTube",
   "search.voiceUnavailable": "Voice search unavailable",
   "search.noResults": "No results found",
   "search.back": "Back",
   "search.noSuggestions": "No suggestions",
-
   "you.title": "You",
   "you.history": "History",
   "you.yourVideos": "Your videos",
@@ -48,7 +45,6 @@
   "you.downloadsDesc": "Offline videos",
   "you.playlistsDesc": "Saved playlists",
   "you.editProfile": "Edit profile (demo)",
-
   "player.comments": "Comments",
   "player.comments.dotCount": "• 123",
   "player.comments.userTime": "User %s • 2 hours ago",
@@ -73,16 +69,13 @@
   "player.upNext": "Up next",
   "player.descriptionStub": "Description will appear here.",
   "player.noRecommendations": "No YouTube recommendations here.",
-
   "player.action.dislike": "Dislike",
   "player.action.share": "Share",
   "player.action.download": "Download",
   "player.action.save": "Save",
-
   "player.sheet.playbackSpeed": "Playback speed",
   "player.sheet.quality": "Quality (HLS/DASH)",
   "player.sheet.qualityAuto": "Recommended",
-
   "player.settings.title": "Settings",
   "player.settings.playback": "Playback",
   "player.settings.playbackSubtitle": "Speed & quality",
@@ -90,28 +83,23 @@
   "player.settings.captionsSubtitle": "Off",
   "player.settings.autoplay": "Autoplay",
   "player.settings.autoplaySubtitle": "On",
-
   "player.sheet.share": "Share",
   "player.sheet.copyLink": "Copy link",
   "player.sheet.linkCopied": "Link copied",
   "player.sheet.shareToMessages": "Share to messages",
   "player.sheet.shareToEmail": "Share to email",
-
   "player.sheet.download": "Download",
   "player.sheet.downloadDescription": "Save this video to watch offline.",
   "player.sheet.downloading": "Downloading…",
   "player.sheet.downloadButton": "Download",
-
   "player.sheet.savePlaylist": "Save to playlist",
   "player.sheet.createNewPlaylist": "Create new playlist",
   "player.playlists.watchLater": "Watch later",
   "player.playlists.favorites": "Favorites",
   "player.playlists.music": "Music",
-
   "shorts.feed.loading": "Loading Shorts…",
   "shorts.feed.loadError": "Couldn’t load Shorts.",
   "shorts.feed.empty": "No Shorts yet. Add them in the admin (API GET …/shorts).",
-
   "shorts.like": "Like",
   "shorts.comment": "Comment",
   "shorts.share": "Share",
@@ -139,7 +127,6 @@
   "shorts.demo.comment2.timeAgo": "2 months ago",
   "shorts.demo.comment3.text": "What is this song called?",
   "shorts.demo.comment3.timeAgo": "1 week ago",
-
   "publish.createTitle": "Create",
   "publish.uploadVideosTitle": "Upload videos",
   "publish.uploadVideosSubtitle": "Upload from your device",
@@ -159,7 +146,6 @@
   "publish.options.openingCamera": "Opening camera…",
   "publish.options.createFromPhotos": "Create from photos",
   "publish.options.choosePhotos": "Choose photos",
-
   "subscriptions.title": "Subscriptions",
   "subscriptions.manage": "Manage",
   "subscriptions.manageSubscriptions": "Manage subscriptions",
@@ -169,20 +155,16 @@
   "subscriptions.channel.cookingWithKids": "Cooking with Kids",
   "subscriptions.channel.funnyAnimals": "Funny Animals",
   "subscriptions.channel.learningChannel": "Learning Channel",
-
   "you.privateProfileDemo": "Private profile",
   "library.noVideosHereYet": "No videos here yet",
-
   "home.cast.connectToTv": "Connect to a TV or other device to play video on a bigger screen.",
   "home.cast.chromecast": "Chromecast",
   "home.cast.notConnected": "Not connected",
   "home.cast.searchingDevices": "Searching for devices…",
   "home.cast.help": "Help",
-
   "home.notifications.markAllAsRead": "Mark all as read",
   "home.notifications.caughtUpTitle": "You're all caught up",
   "home.notifications.noNewNotifications": "No new notifications",
-
   "home.topic.music": "Music",
   "home.topic.gaming": "Gaming",
   "home.topic.sports": "Sports",
@@ -191,13 +173,11 @@
   "home.topic.fashion": "Fashion",
   "home.topic.science": "Science",
   "home.topic.cooking": "Cooking",
-
   "home.feedback.title": "Send feedback",
   "home.feedback.hint": "Tell us what you think",
   "home.feedback.cancel": "CANCEL",
   "home.feedback.send": "SEND",
   "home.feedback.thanks": "Thanks for your feedback!",
-
   "videoList.moreActions": "More actions",
   "videoList.playNow": "Play now",
   "videoList.watchLater": "Watch later",
@@ -206,7 +186,7 @@
   "videoList.savedToPlaylist": "Saved to playlist",
   "videoList.semantics.video": "Video: %title. %meta",
   "videoList.semantics.channelAvatar": "Channel avatar",
-
+  "video.channel": "Channel",
   "player.downloadSheet.quality": "Quality",
   "player.snackbar.savedTo": "Saved to %s",
   "player.tooltip.back": "Back",
@@ -221,9 +201,11 @@
   "player.tooltip.fullscreen": "Fullscreen",
   "player.tooltip.previousVideo": "Previous video",
   "player.tooltip.nextVideo": "Next video",
-
   "nav.home": "Home",
   "nav.shorts": "Shorts",
   "nav.subscriptions": "Subscriptions",
-  "nav.you": "You"
+  "nav.you": "You",
+  "channel.unavailable": "Channel is unavailable for this video",
+  "channel.videoCount": "%s videos",
+  "channel.empty": "No videos in this channel yet"
 }

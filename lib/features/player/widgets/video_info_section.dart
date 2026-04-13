@@ -43,6 +43,8 @@ class VideoInfoSection extends StatefulWidget {
     required this.video,
     required this.actions,
     required this.qualityLabel,
+    required this.onOpenVideo,
+    required this.onOpenChannel,
     required this.onLikeToggle,
     required this.onDislikeToggle,
     required this.onSubscribeToggle,
@@ -54,6 +56,8 @@ class VideoInfoSection extends StatefulWidget {
   final VideoItem video;
   final ValueListenable<PlayerActionsState> actions;
   final String qualityLabel;
+  final void Function(VideoItem) onOpenVideo;
+  final void Function(VideoItem) onOpenChannel;
   final VoidCallback onLikeToggle;
   final VoidCallback onDislikeToggle;
   final VoidCallback onSubscribeToggle;
@@ -171,7 +175,10 @@ class _VideoInfoSectionState extends State<VideoInfoSection> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: _ChannelRow(
+              video: widget.video,
               channelName: widget.video.channelName,
+              channelSlug: widget.video.channelSlug,
+              onOpenChannel: widget.onOpenChannel,
               actions: widget.actions,
               onSubscribeToggle: widget.onSubscribeToggle,
             ),
@@ -220,7 +227,8 @@ class _VideoInfoSectionState extends State<VideoInfoSection> {
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 child: VideoListItem(
                   video: rec,
-                  onTap: () {},
+                  onTap: () => widget.onOpenVideo(rec),
+                  onChannelTap: widget.onOpenChannel,
                 ),
               ),
           ],
@@ -364,31 +372,49 @@ String _mockSubscribers(String name) {
 
 class _ChannelRow extends StatelessWidget {
   const _ChannelRow({
+    required this.video,
     required this.channelName,
+    this.channelSlug,
+    required this.onOpenChannel,
     required this.actions,
     required this.onSubscribeToggle,
   });
 
+  final VideoItem video;
   final String channelName;
+  final String? channelSlug;
+  final void Function(VideoItem) onOpenChannel;
   final ValueListenable<PlayerActionsState> actions;
   final VoidCallback onSubscribeToggle;
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final avatarColor = _channelColorForName(channelName);
     final subscriberText = _mockSubscribers(channelName);
+    final semanticsLabel = channelName.isNotEmpty
+        ? '${l.t('video.channel')}: $channelName'
+        : (channelSlug != null && channelSlug!.isNotEmpty
+            ? '${l.t('video.channel')}: $channelSlug'
+            : l.t('video.channel'));
     return ValueListenableBuilder<PlayerActionsState>(
       valueListenable: actions,
       builder: (context, a, _) {
-        return Row(
-          children: [
-            // GUI9: colored initial avatar
-            CircleAvatar(
-              radius: 20,
-              backgroundColor: avatarColor,
-              child: Text(
-                channelName.isNotEmpty ? channelName.characters.first.toUpperCase() : '?',
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 17),
+        return Semantics(
+          label: semanticsLabel,
+          child: Row(
+            children: [
+            GestureDetector(
+              onTap: channelSlug == null || channelSlug!.isEmpty
+                  ? null
+                  : () => onOpenChannel(video),
+              child: CircleAvatar(
+                radius: 20,
+                backgroundColor: avatarColor,
+                child: Text(
+                  channelName.isNotEmpty ? channelName.characters.first.toUpperCase() : '?',
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 17),
+                ),
               ),
             ),
             const SizedBox(width: 10),
@@ -396,11 +422,16 @@ class _ChannelRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    channelName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                  GestureDetector(
+                    onTap: channelSlug == null || channelSlug!.isEmpty
+                        ? null
+                        : () => onOpenChannel(video),
+                    child: Text(
+                      channelName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                    ),
                   ),
                   // GUI7: subscriber count below channel name
                   if (subscriberText.isNotEmpty)
@@ -435,12 +466,13 @@ class _ChannelRow extends StatelessWidget {
               ),
               onPressed: onSubscribeToggle,
               child: Text(
-                AppLocalizations.of(context)
+                l
                     .t(a.subscribed ? 'shorts.subscribed' : 'shorts.subscribe'),
                 style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
               ),
             ),
           ],
+          ),
         );
       },
     );

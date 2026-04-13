@@ -12,10 +12,12 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
     required this.onOpenVideo,
+    required this.onOpenChannel,
     required this.onProfile,
   });
 
   final Future<void> Function(VideoItem) onOpenVideo;
+  final Future<void> Function(VideoItem) onOpenChannel;
   final VoidCallback onProfile;
 
   @override
@@ -26,6 +28,12 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<SearchHistoryEntry> _searchHistory = [];
   // Internal filter ids (not localized), used for basic filtering on feed.
   String _activeFilter = 'all';
+
+  /// Фильтр ленты по slug канала (`GET .../videos?channel=`), `null` — все видео.
+  String? _selectedChannelSlug;
+
+  /// Уникальные каналы из последней загрузки без фильтра (для чипов).
+  List<({String slug, String name})> _discoveredChannels = [];
 
   bool _feedLoading = true;
   String? _feedError;
@@ -54,14 +62,56 @@ class _HomeScreenState extends State<HomeScreen> {
       if (force) _feedError = null;
     });
     try {
-      await VideoRepository.instance.loadFeed(force: force);
+      await VideoRepository.instance.loadFeed(
+        force: force,
+        channelSlug: _selectedChannelSlug,
+      );
       _feedError = null;
     } catch (e) {
       _feedError = VideoRepository.instance.lastError ?? e.toString();
     }
     if (mounted) {
-      setState(() => _feedLoading = false);
+      setState(() {
+        _feedLoading = false;
+        if (_selectedChannelSlug == null) {
+          _discoveredChannels = _buildDiscoveredChannels();
+        }
+      });
     }
+  }
+
+  List<({String slug, String name})> _buildDiscoveredChannels() {
+    final map = <String, String>{};
+    for (final v in VideoRepository.instance.cachedFeed) {
+      final s = v.channelSlug;
+      if (s != null && s.isNotEmpty) {
+        map[s] = v.channelName.isNotEmpty ? v.channelName : s;
+      }
+    }
+    final list = map.entries
+        .map((e) => (slug: e.key, name: e.value))
+        .toList();
+    list.sort((a, b) => a.name.compareTo(b.name));
+    return list;
+  }
+
+  /// Чипы: каталог + выбранный slug, если его ещё нет в списке.
+  List<({String slug, String name})> get _channelChipsToShow {
+    final base = List<({String slug, String name})>.from(_discoveredChannels);
+    final sel = _selectedChannelSlug;
+    if (sel != null && !base.any((c) => c.slug == sel)) {
+      final feed = VideoRepository.instance.cachedFeed;
+      final name = feed.isNotEmpty && feed.first.channelSlug == sel
+          ? (feed.first.channelName.isNotEmpty ? feed.first.channelName : sel)
+          : sel;
+      base.insert(0, (slug: sel, name: name));
+    }
+    return base;
+  }
+
+  void _onChannelFilterChanged(String? slug) {
+    setState(() => _selectedChannelSlug = slug);
+    _loadFeed(force: true);
   }
 
   List<VideoItem> get _filteredFeed {
@@ -356,6 +406,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                 ),
               ),
+              if (_channelChipsToShow.isNotEmpty || _selectedChannelSlug != null)
+                SliverToBoxAdapter(
+                  child: _ChannelChipsRow(
+                    sectionTitle: AppLocalizations.of(context).t('home.channels.section'),
+                    allLabel: AppLocalizations.of(context).t('home.filter.all'),
+                    selectedSlug: _selectedChannelSlug,
+                    channels: _channelChipsToShow,
+                    onChanged: _onChannelFilterChanged,
+                  ),
+                ),
               const SliverToBoxAdapter(child: SizedBox(height: 12)),
               // GUI4: skeleton shimmer cards while loading
               if (showInitialLoading)
@@ -435,6 +495,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: VideoListItem(
                           video: item,
                           onTap: () => widget.onOpenVideo(item),
+                          onChannelTap: (_) => widget.onOpenChannel(item),
                         ),
                       );
                     },
@@ -596,6 +657,76 @@ class _ChipsRow extends StatelessWidget {
         itemCount: chips.length,
         separatorBuilder: (_, __) => const SizedBox(width: 10),
         itemBuilder: (context, i) => Center(child: chips[i]),
+      ),
+    );
+  }
+}
+
+/// Горизонтальные чипы фильтра по каналам API (`?channel=slug`).
+class _ChannelChipsRow extends StatelessWidget {
+  const _ChannelChipsRow({
+    required this.sectionTitle,
+    required this.allLabel,
+    required this.selectedSlug,
+    required this.channels,
+    required this.onChanged,
+  });
+
+  final String sectionTitle;
+  final String allLabel;
+  final String? selectedSlug;
+  final List<({String slug, String name})> channels;
+  final void Function(String? slug) onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, bottom: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Text(
+              sectionTitle,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          SizedBox(
+            height: 40,
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              scrollDirection: Axis.horizontal,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: FilterChip(
+                    label: Text(allLabel),
+                    selected: selectedSlug == null,
+                    onSelected: (_) => onChanged(null),
+                    showCheckmark: false,
+                    selectedColor: const Color(0xFF9A9898),
+                  ),
+                ),
+                for (final c in channels)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: FilterChip(
+                      label: Text(c.name),
+                      selected: selectedSlug == c.slug,
+                      onSelected: (_) => onChanged(c.slug),
+                      showCheckmark: false,
+                      selectedColor: const Color(0xFF9A9898),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

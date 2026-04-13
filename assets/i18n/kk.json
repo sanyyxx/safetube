@@ -6,12 +6,12 @@
   "theme.light": "Жарық",
   "theme.system": "Жүйе",
   "theme.dark": "Қараңғы",
-
   "home.cast": "Каст",
   "home.notifications": "Хабарламалар",
   "home.search": "Іздеу",
   "home.explore": "Зерттеу",
   "home.sendFeedback": "КЕРІ БАЙЛАНЫС ЖІБЕРУ",
+  "home.channels.section": "Арналар",
   "home.filter.all": "Барлығы",
   "home.filter.newToYou": "Сізге арналған жаңа",
   "home.filter.programming": "Компьютерлік бағдарламалау",
@@ -26,18 +26,15 @@
   "home.feed.retry": "Қайталау",
   "home.feed.empty": "Әлі бейне жоқ. Әкімші панелінен қосыңыз.",
   "home.feed.refreshFeed": "Тасманы жаңарту",
-
   "dialog.search.title": "Іздеу",
   "dialog.search.hint": "Атауы немесе арнасы бойынша іздеңіз",
   "dialog.search.cancel": "БАС ТАРТУ",
   "dialog.search.apply": "ҚОЛДАНУ",
-
   "search.hintYouTube": "YouTube-да іздеу",
   "search.voiceUnavailable": "Дауыстық іздеу қолжетімсіз",
   "search.noResults": "Ештеңе табылмады",
   "search.back": "Артқа",
   "search.noSuggestions": "Ұсыныстар жоқ",
-
   "you.title": "You",
   "you.history": "Тарих",
   "you.yourVideos": "Сіздің видеоларыңыз",
@@ -48,7 +45,6 @@
   "you.downloadsDesc": "Офлайн видео",
   "you.playlistsDesc": "Сақталған плейлисттер",
   "you.editProfile": "Профильді өңдеу (демо)",
-
   "player.comments": "Пікірлер",
   "player.comments.dotCount": "• 123",
   "player.comments.userTime": "Пайдаланушы %s • 2 сағат бұрын",
@@ -73,16 +69,13 @@
   "player.upNext": "Келесі",
   "player.descriptionStub": "Сипаттама осында пайда болады.",
   "player.noRecommendations": "Ұсыныстар жоқ.",
-
   "player.action.dislike": "Жоқ",
   "player.action.share": "Бөлісу",
   "player.action.download": "Жүктеу",
   "player.action.save": "Сақтау",
-
   "player.sheet.playbackSpeed": "Ойнату жылдамдығы",
   "player.sheet.quality": "Сапа (HLS/DASH)",
   "player.sheet.qualityAuto": "Ұсынылады",
-
   "player.settings.title": "Баптаулар",
   "player.settings.playback": "Ойнату",
   "player.settings.playbackSubtitle": "Жылдамдық және сапа",
@@ -90,28 +83,23 @@
   "player.settings.captionsSubtitle": "Өшірулі",
   "player.settings.autoplay": "Автотаспа",
   "player.settings.autoplaySubtitle": "Қосулы",
-
   "player.sheet.share": "Бөлісу",
   "player.sheet.copyLink": "Сілтемені көшіру",
   "player.sheet.linkCopied": "Сілтеме көшірілді",
   "player.sheet.shareToMessages": "Хабарламамен бөлісу",
   "player.sheet.shareToEmail": "Email-ға жіберу",
-
   "player.sheet.download": "Жүктеу",
   "player.sheet.downloadDescription": "Интернетсіз көру үшін сақтаңыз.",
   "player.sheet.downloading": "Жүктелуде…",
   "player.sheet.downloadButton": "Жүктеу",
-
   "player.sheet.savePlaylist": "Ойнату тізіміне сақтау",
   "player.sheet.createNewPlaylist": "Жаңа ойнату тізімін жасау",
   "player.playlists.watchLater": "Кейін көру",
   "player.playlists.favorites": "Таңдаулылар",
   "player.playlists.music": "Музыка",
-
   "shorts.feed.loading": "Қысқа бейнелер жүктелуде…",
   "shorts.feed.loadError": "Қысқа бейнелерді жүктеу мүмкін болмады.",
   "shorts.feed.empty": "Әлі қысқа бейне жоқ. Әкімші панелінен қосыңыз (API GET …/shorts).",
-
   "shorts.like": "Лайк",
   "shorts.comment": "Пікір",
   "shorts.share": "Бөлісу",
@@ -139,7 +127,6 @@
   "shorts.demo.comment2.timeAgo": "2 ай бұрын",
   "shorts.demo.comment3.text": "Бұл әуеннің аты қалай аталады?",
   "shorts.demo.comment3.timeAgo": "1 апта бұрын",
-
   "publish.createTitle": "Құру",
   "publish.uploadVideosTitle": "Видеоларды жүктеу",
   "publish.uploadVideosSubtitle": "Құрылғыдан жүктеу",
@@ -159,7 +146,6 @@
   "publish.options.openingCamera": "Камера ашылуда…",
   "publish.options.createFromPhotos": "Суреттерден жасау",
   "publish.options.choosePhotos": "Суреттерді таңдаңыз",
-
   "subscriptions.title": "Жазылулар",
   "subscriptions.manage": "Басқару",
   "subscriptions.manageSubscriptions": "Жазылуларды басқару",
@@ -169,20 +155,16 @@
   "subscriptions.channel.cookingWithKids": "Балалармен бірге пісіру",
   "subscriptions.channel.funnyAnimals": "Күлкілі жануарлар",
   "subscriptions.channel.learningChannel": "Оқу каналы",
-
   "you.privateProfileDemo": "Жеке профиль",
   "library.noVideosHereYet": "Әзірге видео жоқ",
-
   "home.cast.connectToTv": "Үлкен экранда видео көру үшін теледидарға немесе басқа құрылғыға қосылыңыз.",
   "home.cast.chromecast": "Chromecast",
   "home.cast.notConnected": "Қосылмаған",
   "home.cast.searchingDevices": "Құрылғылар ізделуде…",
   "home.cast.help": "Көмек",
-
   "home.notifications.markAllAsRead": "Бәрін оқылды деп белгілеу",
   "home.notifications.caughtUpTitle": "Сіз бәрін көрдіңіз",
   "home.notifications.noNewNotifications": "Жаңа хабарландыру жоқ",
-
   "home.topic.music": "Музыка",
   "home.topic.gaming": "Ойындар",
   "home.topic.sports": "Спорт",
@@ -191,13 +173,11 @@
   "home.topic.fashion": "Сән",
   "home.topic.science": "Ғылым",
   "home.topic.cooking": "Тағам дайындау",
-
   "home.feedback.title": "Пікір жіберу",
   "home.feedback.hint": "Сіз не ойлайсыз, айтыңыз",
   "home.feedback.cancel": "Бас тарту",
   "home.feedback.send": "Жіберу",
   "home.feedback.thanks": "Пікіріңіз үшін рахмет!",
-
   "videoList.moreActions": "Қосымша әрекеттер",
   "videoList.playNow": "Қазір ойнату",
   "videoList.watchLater": "Кейін көру",
@@ -206,7 +186,7 @@
   "videoList.savedToPlaylist": "Ойнату тізіміне сақталды",
   "videoList.semantics.video": "Видео: %title. %meta",
   "videoList.semantics.channelAvatar": "Канал аватары",
-
+  "video.channel": "Арна",
   "player.downloadSheet.quality": "Сапа",
   "player.snackbar.savedTo": "%s-қа сақталды",
   "player.tooltip.back": "Артқа",
@@ -221,9 +201,11 @@
   "player.tooltip.fullscreen": "Толық экран",
   "player.tooltip.previousVideo": "Алдыңғы бейне",
   "player.tooltip.nextVideo": "Келесі бейне",
-
   "nav.home": "Басты бет",
   "nav.shorts": "Shorts",
   "nav.subscriptions": "Жазылулар",
-  "nav.you": "You"
+  "nav.you": "You",
+  "channel.unavailable": "Бұл бейне үшін арна қолжетімсіз",
+  "channel.videoCount": "%s бейне",
+  "channel.empty": "Бұл арнада әзірге бейне жоқ"
 }

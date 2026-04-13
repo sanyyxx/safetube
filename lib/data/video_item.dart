@@ -7,6 +7,7 @@ class VideoItem {
     required this.thumbnailUrl,
     required this.title,
     required this.channelName,
+    this.channelSlug,
     required this.viewsText,
     required this.publishedText,
     this.durationText,
@@ -23,6 +24,10 @@ class VideoItem {
 
   final String title;
   final String channelName;
+
+  /// Slug канала с API (`channel.slug`), для фильтра `?channel=`; у старых видео может быть `null`.
+  final String? channelSlug;
+
   final String viewsText;
   final String publishedText;
 
@@ -235,17 +240,76 @@ class VideoItem {
       ]);
     }
 
+    String? channelSlugOut;
+    String channelNameOut = '';
+
+    String pickFromMap(Map<String, dynamic> m, List<String> keys) {
+      for (final k in keys) {
+        final v = m[k];
+        if (v != null && v.toString().trim().isNotEmpty) {
+          return v.toString().trim();
+        }
+      }
+      return '';
+    }
+
+    void applyChannelMap(Map<String, dynamic> rawCh) {
+      final attrs = rawCh['attributes'];
+      if (attrs is Map) {
+        final am = Map<String, dynamic>.from(attrs);
+        if (channelNameOut.isEmpty) {
+          channelNameOut = pickFromMap(am, ['name', 'title', 'label']);
+        }
+        final s = am['slug'];
+        if (s != null && s.toString().trim().isNotEmpty) {
+          channelSlugOut = s.toString().trim();
+        }
+      }
+      if (channelNameOut.isEmpty) {
+        channelNameOut = pickFromMap(rawCh, ['name', 'title', 'label']);
+      }
+      if (channelSlugOut == null) {
+        final s = rawCh['slug'];
+        if (s != null && s.toString().trim().isNotEmpty) {
+          channelSlugOut = s.toString().trim();
+        }
+      }
+    }
+
+    final chRaw = json['channel'];
+    if (chRaw is String) {
+      channelNameOut = chRaw.trim();
+    } else if (chRaw is Map) {
+      applyChannelMap(Map<String, dynamic>.from(chRaw));
+    }
+
+    final rel = json['relationships'];
+    if (rel is Map) {
+      final chRel = rel['channel'];
+      if (chRel is Map) {
+        final inc = chRel['data'];
+        if (inc is Map &&
+            (channelNameOut.isEmpty || channelSlugOut == null)) {
+          applyChannelMap(Map<String, dynamic>.from(inc));
+        }
+      }
+    }
+
+    if (channelNameOut.isEmpty) {
+      channelNameOut = pick([
+        'channel_name',
+        'channelName',
+        'author',
+      ]);
+    }
+
     return VideoItem(
-      id: idRaw == null ? null : idRaw.toString(),
+      id: idRaw?.toString(),
       playbackUrl: resolveMediaUrl(playbackRaw),
       thumbnailUrl: thumbRaw.isEmpty ? '' : resolveMediaUrl(thumbRaw),
       title: pick(['title', 'name']),
-      channelName: pick([
-        'channel_name',
-        'channelName',
-        'channel',
-        'author',
-      ]),
+      channelName: channelNameOut,
+      channelSlug: channelSlugOut,
       viewsText: pick([
         'views_text',
         'viewsText',

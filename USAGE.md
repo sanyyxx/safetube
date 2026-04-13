@@ -57,7 +57,7 @@ puro flutter run -d <device_id>
 
 | Задача | Сейчас | Что нужно |
 |--------|--------|-----------|
-| **Контент (видео и шортсы)** | `GET .../videos` — `lib/data/video_repository.dart` | `GET .../shorts` — `lib/data/short_repository.dart`, см. `docs/API_SHORTS.md`. |
+| **Контент (видео и шортсы)** | `GET .../videos` — `lib/data/video_repository.dart` (фильтр по каналу: `?channel={slug}`, поле `channel` в JSON) | `GET .../shorts` — `lib/data/short_repository.dart`, см. `docs/API_SHORTS.md`. |
 | **Cast (трансляция на ТВ)** | SnackBar «не настроено» | Интеграция с Chromecast SDK (например `flutter_cast`) или аналог. |
 | **Уведомления** | Заглушка | Push-уведомления (Firebase Cloud Messaging и т.п.) или свой сервер. |
 | **Реальные подписки** | Демо-список каналов | Хранить подписки пользователя (локально или в аккаунте на бэкенде) и подтягивать ленту по ним. |
